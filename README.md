@@ -1,5 +1,5 @@
 # Progetto **Pseudo FAT**
-#### Martina D'Amico, #matr.XXX, emmedam@gmail.com
+#### Martina D'Amico - 1791820 - damico.1791820@studenti.uniroma1.it
 
 ***
 
