@@ -28,7 +28,7 @@ The opening of a file should return a `FileHandle` that stores the position in a
 Per implementare una versione simile al file system **FAT**, senza l'onere di operare con gli strumenti tipici dei bassi livelli del calcolatore elettronico, si mappa lo spazio fisico su uno spazio di memoria virtuale recuperando i dati dalla memoria in modo grezzo _raw_.
 
 ## Modello Pseudo FAT
-Nel nostro modello si utilizza un sottoinsieme delle funzionalità e dei dati del classico **FAT**: quelli strettamente necessari per una corretta implementazione del file system. Inoltre si adottanno delle semplificazioni, ad esempio, nel modello reale non si può prescidere da una grandezza costante quella del `disk sector` pari a `512 bytes` (per i classici _hard-disk_), nel nostro sistem, poiché poco interessati allo _storage_ vero e proprio, si fissa tale grandezza a `12 byte`. Inoltre si gestiscono solamente file di testo e i nomi dei files e delle directory avranno una lunghezza massima di 8 caratteri. I files non potranno avere una dimensione maggiore di 255 byte.
+Nel nostro modello si utilizza un sottoinsieme delle funzionalità e dei dati del classico **FAT**: quelli strettamente necessari per una corretta implementazione del file system. Inoltre si adottanno delle semplificazioni, ad esempio, nel modello reale non si può prescidere da una grandezza costante quella del `disk sector` pari a `512 bytes` (per i classici _hard-disk_), nel nostro sistema, poiché poco interessati allo _storage_ vero e proprio, si fissa tale grandezza a `16 byte`. Inoltre si gestiscono solamente file di testo e i nomi dei files e delle directory ed avranno una lunghezza massima di 12 caratteri (8 + 3 caratteri di estensione, senza contare il punto, infatti viene sottoinsteso, quindi non scritto in memoria). I files non potranno avere una dimensione maggiore di 255 byte.
 
 ## Rappresentazione dello spazio
 Lo spazio virtuale, mappato in memoria, che modella il "disco fisico" viene suddiviso come segue
@@ -44,7 +44,7 @@ Occupa il primo settore del volume e conserva informazioni generali, come di seg
 |1|1|Numero di settori per cluster|
 |2|1|Numero di cluster|
 |3|1|Numero di `entries` per le `Directory Table` inclusa la `Root Directory`|
-|4|8|Nome del volume|
+|4|12|Nome del volume|
 
 ### FAT
 
@@ -73,16 +73,16 @@ Lo spazio occupato in memoria della `Directory Table`, espresso in settori, è d
 
 `Spazio Directory Table (settori) = ⌈n_directory_entries * lughezza_directory_entry / n_byte_per settore⌉`
 
-Nel nostro modello avendo assunto che il numero di byte per settore viene fissato a 12, osservando la struttura delle `directory_entry` che occupano esattamente 12 byte, si può semplificare il calcolo come segue:
+Nel nostro modello avendo assunto che il numero di byte per settore viene fissato a 16, osservando la struttura delle `directory_entry` che occupano esattamente 16 byte, si può semplificare il calcolo come segue:
 
 `Spazio Directory Table (settori) = n_directory_entries`
 
 #### Directory Entry
-Come già descritto la `directory entry` rappresenta un singolo record della `directory table` dove vengono memorizzate le informazioni relative ai `files` o alle `sub-direcotry` afferenti una determinata `directory`
+Come già descritto la `directory entry` rappresenta un singolo record della `directory table` dove vengono memorizzate le informazioni relative ai `files` o alle `sub-directory` relativo a una determinata `directory`
 
 |offset (byte)|size (byte)|descrizione|
 |-------------|-----------|:----------|
-|0|8|nome|
+|0|12|nome|
 |8|2|data di creazione (in millisecondi)|
 |10|1|primo cluster|
 |11|1|dimensione (se uguale a zero si tratta di una `sub-directory`)|
@@ -90,23 +90,23 @@ Come già descritto la `directory entry` rappresenta un singolo record della `di
 ### Data Area
 Spazio riservato allo storage vero e proprio dei files e delle `Directory Table`, rappresentative delle sub-directory della root, e viene suddiviso in cluster.
 
-
 ### Esempio rappresentazione di un volume
 
 ```
-Parametri del boot record
--byte per settore: 12
--n. settori per cluster: 3
--n. cluster: 100
--n. entries per le Directory Table: 10
--nome del volume: AFRODITE
+Volume di 10 Mbyte (10 * 2^20 = 10485760 byte)
 
-Spazio Boot record = ⌈12 byte / 12 byte⌉ (1 settore)
-Spazio FAT = ⌈10 byte / 12 byte⌉ (1 settore)
-Spazio Root Directory = ⌈120 byte / 12 byte⌉ (10 settori)
-Spazio Data area = 3600 byte (300 settori)
+Parametri del boot record (16 byte)
+-byte per settore: 16
+-n. entries per le Directory Table: 20
+-nome del volume: AFRODITE.fat
 
-Il volume totale allocato è dunque di 312 settori pari a 3744 byte 
+Spazio Boot record = ⌈16 byte / 16 byte⌉ (1 settore)
+Spazio Root Directory = 20 settori (320 byte)
+Spazio FAT = 16 settori (256 byte)
+Spazio Data area = 10485760 - (37*16) = 10485168 byte
+-n. cluster: ⌊ 10485168 / 256 ⌋ = 40957
+-n. settori per cluster: ?
+
 ```
 ### Interfaccia utente
 
@@ -114,7 +114,7 @@ Il programma si utilizza da terminale, in ambiente **linux**, e si avvia con il 
 
 `$ ./PseudoFAT [diskname]`
 
-il parametro `diskname` (max 8 caratteri) indica il nome del disco sul quale lavorare, se non esiste si crea un nuovo disco altrimenti mappa in memoria quello passato come parametro.
+il parametro `diskname` (max 12 caratteri) indica il nome del disco sul quale lavorare, se non esiste si crea un nuovo disco altrimenti mappa in memoria quello passato come parametro.
 
 |comando |sintassi |descrizione|
 |:-------|:--------|:----------|
