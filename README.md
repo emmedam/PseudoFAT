@@ -28,7 +28,7 @@ The opening of a file should return a `FileHandle` that stores the position in a
 Per implementare una versione simile al file system **FAT**, senza l'onere di operare con gli strumenti tipici dei bassi livelli del calcolatore elettronico, si mappa lo spazio fisico su uno spazio di memoria virtuale recuperando i dati dalla memoria in modo grezzo _raw_.
 
 ## Modello Pseudo FAT
-Nel nostro modello si utilizza un sottoinsieme delle funzionalità e dei dati del classico **FAT**: quelli strettamente necessari per una corretta implementazione del file system. Inoltre si adottanno delle semplificazioni, ad esempio, nel modello reale non si può prescidere da una grandezza costante quella del `disk sector` pari a `512 bytes` (per i classici _hard-disk_), nel nostro sistema, poiché poco interessati allo _storage_ vero e proprio, si fissa tale grandezza a `16 byte`. Inoltre si gestiscono solamente file di testo e i nomi dei files e delle directory ed avranno una lunghezza massima di 12 caratteri (8 + 3 caratteri di estensione, senza contare il punto, infatti viene sottoinsteso, quindi non scritto in memoria). I files non potranno avere una dimensione maggiore di 255 byte.
+Nel nostro modello si utilizza un sottoinsieme delle funzionalità e dei dati del classico **FAT**: quelli strettamente necessari per una corretta implementazione del file system. Inoltre si adottanno delle semplificazioni, ad esempio, nel modello reale non si può prescidere da una grandezza costante quella del `disk sector` pari a `512 bytes` (per i classici _hard-disk_), nel nostro sistema, poiché poco interessati allo _storage_ vero e proprio, si fissa tale grandezza a `32 byte`. Inoltre si gestiscono solamente file di testo e i nomi dei files e delle directory ed avranno una lunghezza massima di 12 caratteri (8 + 4 caratteri di estensione, incluso il punto). I files non potranno avere una dimensione maggiore di 255 byte.
 
 ## Rappresentazione dello spazio
 Lo spazio virtuale, mappato in memoria, che modella il "disco fisico" viene suddiviso come segue
@@ -40,11 +40,13 @@ Occupa il primo settore del volume e conserva informazioni generali, come di seg
 
 |offset (byte)|size (byte)|descrizione|
 |:------------|:----------|:----------|
-|0|1|Numero di byte per settore|
-|1|1|Numero di settori per cluster|
-|2|1|Numero di cluster|
-|3|1|Numero di `entries` per le `Directory Table` inclusa la `Root Directory`|
-|4|12|Nome del volume|
+|0|2|Numero di byte per settore|
+|2|2|Numero di settori per cluster|
+|4|2|Numero di cluster|
+|6|2|Numero di `entries` per le `Directory Table` inclusa la `Root Directory`|
+|8|8|Data di creazione del volume (in millisecondi)|
+|16|12|Nome del volume |
+|28|4|Spazio inutilizzato|
 
 ### FAT
 
@@ -56,12 +58,12 @@ La **FAT** occupa un certo numero di settori subito dopo il boot record, lo spaz
 
 |offset (byte)|size (byte)|descrizione|
 |-------------|-----------|:----------|
-|0|1|Può assumere i seguenti valori:|
+|0|2|Può assumere i seguenti valori:|
 |||0: cluster libero|
 |||1: ultimo cluster del file|
-|||2-255: cluster successivo del file|
+|||2-65535: cluster successivo del file|
 
-Ovviamente i cluster logici inizieranno dall'indice 2 e secondo questa nostra implementazione non potranno essere più di 253.
+Ovviamente i cluster logici inizieranno dall'indice 2 e secondo questa nostra implementazione non potranno essere più di 65534.
 
 ### Root Directory
 Occupa un certo numero di settori, in funzione dell'impostazione del valore di numero di `entries` contenuto nel `Boot record`, ove viene memorizzata la `Directory Table`. Quest'ultima è una tabella che elenca i file e le subdirectory della root come verrà meglio specificato nel seguito. Si precisa che ogni directory del volume, inclusa la `root`, possiede una propria `Directory Table`.
@@ -73,7 +75,7 @@ Lo spazio occupato in memoria della `Directory Table`, espresso in settori, è d
 
 `Spazio Directory Table (settori) = ⌈n_directory_entries * lughezza_directory_entry / n_byte_per settore⌉`
 
-Nel nostro modello avendo assunto che il numero di byte per settore viene fissato a 16, osservando la struttura delle `directory_entry` che occupano esattamente 16 byte, si può semplificare il calcolo come segue:
+Nel nostro modello avendo assunto che il numero di byte per settore viene fissato a 32, osservando la struttura delle `directory_entry` che occupano esattamente 32 byte, si può semplificare il calcolo come segue:
 
 `Spazio Directory Table (settori) = n_directory_entries`
 
@@ -83,9 +85,10 @@ Come già descritto la `directory entry` rappresenta un singolo record della `di
 |offset (byte)|size (byte)|descrizione|
 |-------------|-----------|:----------|
 |0|12|nome|
-|8|2|data di creazione (in millisecondi)|
-|10|1|primo cluster|
-|11|1|dimensione (se uguale a zero si tratta di una `sub-directory`)|
+|12|8|data di creazione (in millisecondi)|
+|20|8|data di modifica (in millisecondi)|
+|28|2|primo cluster|
+|30|2|dimensione (se uguale a zero si tratta di una `sub-directory`)|
 
 ### Data Area
 Spazio riservato allo storage vero e proprio dei files e delle `Directory Table`, rappresentative delle sub-directory della root, e viene suddiviso in cluster.
@@ -93,19 +96,20 @@ Spazio riservato allo storage vero e proprio dei files e delle `Directory Table`
 ### Esempio rappresentazione di un volume
 
 ```
-Volume di 10 Mbyte (10 * 2^20 = 10485760 byte)
+Parametri del boot record (32 byte)
+- byte per settore: 32
+- n. settori per cluster: 100
+- n. cluster: 600
+- n. entries per le Directory Table: 50
+- nome del volume: AFRODITE.fat
 
-Parametri del boot record (16 byte)
--byte per settore: 16
--n. entries per le Directory Table: 20
--nome del volume: AFRODITE.fat
 
-Spazio Boot record = ⌈16 byte / 16 byte⌉ (1 settore)
-Spazio Root Directory = 20 settori (320 byte)
-Spazio FAT = 16 settori (256 byte)
-Spazio Data area = 10485760 - (37*16) = 10485168 byte
--n. cluster: ⌊ 10485168 / 256 ⌋ = 40957
--n. settori per cluster: ?
+Spazio Boot record = ⌈32 byte / 32 byte⌉ (1 settore)
+Spazio FAT = ⌈600*2 / 32 ⌉ (38 settore)
+Spazio Root Directory = ⌈(32*50) byte / 32 byte⌉ (50 settori)
+Spazio Data area = 1920000 (60000 settori)
+
+il volume totale allocato è dunque di 60089 settori pari a 1922848 byte
 
 ```
 ### Interfaccia utente
