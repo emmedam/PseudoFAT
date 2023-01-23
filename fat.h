@@ -30,11 +30,11 @@ typedef struct{
 }BootRecord;
 
 typedef struct{
-    char        *name;
-    time_t      *creation_date;
-    time_t      *update_date;
-    u_int16_t   *first_cluster;
-    u_int16_t   *dimension;
+    char        name[12];
+    time_t      creation_date;
+    time_t      update_date;
+    u_int16_t   first_cluster;
+    u_int16_t   dimension;
 }DirectoryEntry;
 
 // typedef struct{
@@ -57,13 +57,13 @@ int fatSectorNumber();
 long dataAreaSectorNumber();
 
 //allocazione BootRecord
-BootRecord* initBootRecord(char *name);
+BootRecord* initBootRecord(char*);
 
 //leggo contenuto del boot record sulla memoria
 void readBootRecord();
 
 //stampo elementi contenuti nel bootRecord
-void print_bootRecord(BootRecord *boot_record);
+void print_bootRecord(BootRecord*);
 
 //****dovrei deallocare BootRecord... e tutti gli malloc(credo)****
 
@@ -71,10 +71,10 @@ void print_bootRecord(BootRecord *boot_record);
 void info();
 
 //formatta il disco di lavoro
-void* format(char *name);
+void* format(char*);
 
 //leggo un settore 
-char* readSector(int n);
+char* readSector(int);
 
 
 //leggo un cluster
@@ -85,4 +85,10 @@ void cluster_info(int *, int*);
 
 //crea una sub-directory, della directory di lavoro, 
 //utilizzando il nome passato nel parametro dirname
-void createDir(char* dirname);
+void createDir(char*);
+
+//lunghezza del disco
+size_t disk_length();
+
+//scrivo su disco 
+void write_on_disk(void*, int);

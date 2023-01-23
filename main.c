@@ -44,9 +44,13 @@ int main(int argc, char** argv){
         }
 
     }
-
-    //salvare contenuto su file
-    save(f_name);
+    
+    if(munmap(disk, disk_length()) == -1){
+        perror("Rimozione mappatura fallita: "); 
+        exit(EXIT_FAILURE);
+        
+    }
+    
     
     return 0;
 
