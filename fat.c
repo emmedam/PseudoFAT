@@ -39,15 +39,15 @@ void* format(char *name){
 
 
 //legge il contenuto del disco, legge il file e lo mappa in memoria
-void readDisk(char* name){
-    int fd_in = open(name,   O_RDONLY );
+void readDisk(char* f_name){
+    
+    int fd_in = open(f_name, O_RDWR);
     if(fd_in < 0 ) {
         perror("impossbile aprire file:");
         exit(1);
     }
-
     //mappo il contenuto del disco rappresentato dal file in memoria
-    disk = mmap(NULL, disk_length(), PROT_WRITE|PROT_READ, MAP_PRIVATE, fd_in, 0);
+    disk = mmap(NULL, disk_length(), PROT_WRITE|PROT_READ, MAP_SHARED, fd_in, 0);
  
     if(disk == MAP_FAILED){
         perror("Mapping Failed: "); 
@@ -57,16 +57,13 @@ void readDisk(char* name){
         
     }
 
-    
-
     close(fd_in);
 
 }
 
 
-char* readSector(int n){
-    char * ds = (char*)(disk + (BYTE_PER_SECTOR * n));
-    return ds;
+void* readSector(int n){
+    return (disk + (BYTE_PER_SECTOR * n));
 }
 
 void readCluster(){
@@ -132,12 +129,15 @@ long dataAreaSectorNumber(){
     return NUMBER_OF_CLUSTER * SECTOR_PER_CLUSTER;
 }
 
-void readDirEntry(DirectoryEntry *dir_entry, char* sector){
+void readDirEntry(DirectoryEntry *dir_entry, void* sector){
     strcpy(dir_entry->name, (char*)(sector+0));
-    dir_entry->creation_date    = *(sector + 12);
-    dir_entry->update_date      = *(sector + 20);
-    dir_entry->first_cluster    = *(sector + 14);
-    dir_entry->dimension        = *(sector + 30);
+    dir_entry->creation_date    = *(time_t*)(sector + 12);
+    dir_entry->update_date      = *(time_t*)(sector + 20);
+    dir_entry->first_cluster    = *(u_int16_t*)(sector + 14);
+    dir_entry->dimension        = *(u_int16_t*)(sector + 30);
+
+    printf("NAME: %s\n", dir_entry->name);
+
 }
 
 //trovo primo cluster libero nella FAT 
@@ -158,17 +158,18 @@ void createDir(char* dirname){
     //controllo se directory già esiste
     DirectoryEntry *dir_entry = (DirectoryEntry*)malloc(sizeof(DirectoryEntry));
     int first_free_sector = 0; 
-    for(int i=0; i < boot_record->n_directory_entries; i++){
-        readDirEntry(dir_entry, readSector( fatSectorNumber() + 1 + i));
-        //printf("directory name[%d]%s\n", i , dir_entry->name);
-        if(strcmp(dir_entry->name, dirname) == 0){
+    for(int i = 0; i < boot_record -> n_directory_entries; i++){
+        printf("name: %s\n", (char*)readSector(fatSectorNumber() + 1 + i));
+        readDirEntry(dir_entry, readSector(fatSectorNumber() + 1+ i));
+        //printf("directory name[%d]: %s\n", i , (char*)dir_entry->name);
+        if(strcmp((char*)dir_entry -> name, dirname) == 0){
             printf("Directory già esistente\n");
             return;
         }
-        //per discriminare se settore sia vuoto, quindi non contiene 
+        // //per discriminare se settore sia vuoto, quindi non contiene 
         //nessuna dir entry, è sufficiente valutare se abbia valorizzato
         //l'attributo primo cluster
-        if( first_free_sector == 0  &&  dir_entry->first_cluster == 0){
+        if(first_free_sector == 0  &&  dir_entry->first_cluster == 0){
             first_free_sector = fatSectorNumber() + 1 + i;
             //printf("first free sector: %d\n", first_free_sector);
             //printf("first cluster dir: %d\n", dir_entry->first_cluster);
@@ -197,20 +198,23 @@ void createDir(char* dirname){
     dir_entry->creation_date    = dir_entry->update_date = creation_time;
     dir_entry->first_cluster    = free_cluster;
     dir_entry->dimension        = 0;
-
+    
+    //printf("name: %s\n", dir_entry->name);
+    
     write_on_disk(dir_entry, first_free_sector);
     
 }
 
 void write_on_disk(void *data, int offset){
-    memcpy((disk + offset), data, sizeof(data));
+    strcpy(disk+offset, data);
+    // memcpy((disk + offset), data, sizeof(data));
 
     //sincronizzo il file con la memoria
-    if(msync(disk, disk_length(),  MS_SYNC) == -1){
-        perror("Sincronizzazione fallita: "); 
-        exit(EXIT_FAILURE);
+    // if(msync(disk, disk_length(),  MS_SYNC) == -1){
+    //     perror("Sincronizzazione fallita: "); 
+    //     exit(EXIT_FAILURE);
         
-    }
+    // }
 }
 
 void save(char *name){

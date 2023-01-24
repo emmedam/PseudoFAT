@@ -19,8 +19,9 @@ int main(int argc, char** argv){
         format(f_name);
     }
 
-    //mappo il disco in memoria
     
+    
+    //mappo il disco in memoria
     readDisk(f_name);
     readBootRecord();
 
@@ -44,12 +45,14 @@ int main(int argc, char** argv){
         }
 
     }
-    
+
     if(munmap(disk, disk_length()) == -1){
         perror("Rimozione mappatura fallita: "); 
         exit(EXIT_FAILURE);
         
     }
+
+
     
     
     return 0;

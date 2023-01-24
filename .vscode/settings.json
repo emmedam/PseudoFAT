@@ -4,6 +4,8 @@
         "errno.h": "c",
         "error_t.h": "c",
         "fat.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "mman.h": "c",
+        "stdlib.h": "c"
     }
 }

@@ -74,7 +74,7 @@ void info();
 void* format(char*);
 
 //leggo un settore 
-char* readSector(int);
+void* readSector(int);
 
 
 //leggo un cluster
