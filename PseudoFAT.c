@@ -30,50 +30,38 @@ int main(int argc, char** argv){
     readBootRecord();
     char* token;
     while(1){
-        printf(COLOR_BOLD_BLUE "root> " COLOR_OFF);
+        if(strcmp(working_dir->name, "root") != 0)
+            printf(COLOR_BOLD_BLUE "root/%s> " COLOR_OFF, working_dir->name);  
+        else  
+            printf(COLOR_BOLD_BLUE "%s> " COLOR_OFF, working_dir->name);
         // fgets(input, sizeof input, stdin);
         scanf(" %[^\n]%*c", input);
-    
+        token = strtok(input, " ");
+
         if(strcmp(input, "info") == 0){
             info();
         }
         
-        else if(strcmp(token = strtok(input, " "), "createDir") == 0){
-            //int i = 0;
+        else if(strcmp(token, "createDir") == 0){
             token = strtok(NULL, " ");
             createDir(token);
             
-            // printf("%s\n", token);
-            // if(token == NULL){ 
-            //     printf("inserire nome directory\n");
-            // }
-            // printf("%s\n", dir_name);
-            // // while( token != NULL ) {
-            //     if(strcmp(token,"") == 0){ 
-            //         printf("inserire nome directory\n");
-            //         break;
-            //     }
-            //     if(strlen(token) > 12){
-            //         printf("stringa troppo lunga\n");
-            //         break;
-            //     }
-            //     strcpy(dir_name, token);
-                
-            //     // i++;
-            //     // if(i>2){
-            //     //     printf("troppi argomenti");
-            //     //     break;
-            //     // }
-
-            //     token = strtok(NULL, " ");
-            // }
-
-            
         }
+    
+        else if(strcmp(token, "changeDir") == 0){
+            token = strtok(NULL, " ");
+            changeDir(token);
+        }
+
+        else if(strcmp(input, "listDir") == 0){
+            listDir(working_dir);
+        }
+
         
 
         else if (strcmp(input, "exit") == 0)
             break;
+        
         else{
             printf("comando sconosciuto\n");
         }

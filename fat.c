@@ -6,11 +6,20 @@ BootRecord *boot_record;
 void save(char*);
 
 //indica in quale directory ci troviamo
-void *working_dir;
+DirectoryEntry *working_dir;
 
 void init(){
        
     boot_record = (BootRecord*) malloc(sizeof(BootRecord));
+
+    working_dir = (DirectoryEntry*)malloc(sizeof(DirectoryEntry));
+
+    strcpy(working_dir->name, "root");
+    working_dir->creation_date = boot_record->date;
+    working_dir->update_date = boot_record->date;
+    working_dir->first_cluster = 0;
+    working_dir->dimension = 0;
+
  
 }
 
@@ -141,7 +150,7 @@ int get_free_cluster(){
     for(int i=0; i < fatSectorNumber(); i++){
         char *sector = readSector(i+1);
         for(int j=2; j < (boot_record->byte_per_sector)/2; j++){
-            if( (*(sector+j)*2) == 0)
+            if( (*(sector+j*2)) == 0)
                 return j;
         }
     }
@@ -163,13 +172,17 @@ void printDirectoryEntry(DirectoryEntry *d){
 }
 
 void createDir(char* dirname){
+    //controllo se validità dirname, se non NULL
+    if(!dirname){
+        printf(COLOR_RED "impossibile creare directory, nome non valido\n" COLOR_DEFAULT);
+        return;
+    }
     //controllo se directory già esiste
     DirectoryEntry *dir_entry = (DirectoryEntry*)malloc(sizeof(DirectoryEntry));
     int first_free_sector = 0;
 
     for(int i = 0; i < boot_record -> n_directory_entries; i++){
         readDirEntry(dir_entry, readSector(fatSectorNumber() + 1 + i));
-        //printf("directory name[%d]: %s\n", i , (char*)dir_entry->name);
         if(strcmp((dir_entry -> name), dirname) == 0){
             printf(COLOR_RED "Directory già esistente\n" COLOR_DEFAULT );
             printDirectoryEntry(dir_entry);
@@ -181,8 +194,6 @@ void createDir(char* dirname){
         //l'attributo primo cluster
         if(first_free_sector == 0  &&  dir_entry -> first_cluster == 0){
             first_free_sector = fatSectorNumber() + 1 + i;
-            //printf("first free sector: %d\n", first_free_sector);
-            //printf("first cluster dir: %d\n", dir_entry->first_cluster);
         
         }
     }   
@@ -224,7 +235,7 @@ void createDir(char* dirname){
     memcpy(readSector(first_free_sector), dir_entry, sizeof(*dir_entry));
 
    
-
+    
     //Scrivo nella FAT il cluster della directory appena creata
     u_int16_t last = 1;
     memcpy( (disk + (boot_record->byte_per_sector + free_cluster * 2)) , &last, sizeof(u_int16_t));
@@ -263,4 +274,68 @@ void save(char *name){
     fflush(fd_out);
    
     fclose(fd_out);
+}
+
+void listDir(DirectoryEntry* dir){
+    
+    //controlla se parametro dir è stato fornito, altrimenti si assume come dir la working_dir
+    if(!dir){
+        dir = working_dir;
+    }
+    DirectoryEntry *tmp_dir = (DirectoryEntry*)malloc(sizeof(DirectoryEntry));
+    tmp_dir->creation_date = dir->creation_date;
+    tmp_dir->dimension = dir->dimension;
+    tmp_dir->first_cluster = dir->first_cluster;
+    strcpy(tmp_dir->name, dir->name);
+    tmp_dir->update_date = dir->update_date;
+    
+    for(int i = 0; i < boot_record -> n_directory_entries; i++){
+        readDirEntry(tmp_dir, readSector(fatSectorNumber() + 1 + i));
+        
+        if(tmp_dir->creation_date != 0){
+            
+            char *date = (char*)malloc(20 * sizeof(char));
+            
+            printf("%s\t", formatTime(date,(tmp_dir->creation_date))); 
+            printf("%d\t", tmp_dir->dimension);   
+            
+            if(tmp_dir->dimension != 0){
+                printf("%s\n", tmp_dir->name);
+            }
+            else{
+                printf(COLOR_GREEN "%s\n" COLOR_DEFAULT, tmp_dir->name);
+            }
+        }
+
+            
+        
+    }   
+    free(tmp_dir);
+}
+
+
+void changeDir(char* dir_name){
+   
+     if(!dir_name){
+        printf(COLOR_RED "fornire directory\n" COLOR_DEFAULT);
+        return;
+    }
+
+    DirectoryEntry *tmp_dir = (DirectoryEntry*)malloc(sizeof(DirectoryEntry));
+    
+    for(int i = 0; i < boot_record -> n_directory_entries; i++){
+        readDirEntry(tmp_dir, readSector(fatSectorNumber() + 1 + i));
+        if( strcmp(tmp_dir->name, dir_name) == 0 ){
+            //cambio workin dir
+            working_dir = tmp_dir;
+            return ;
+        }
+    }
+    //directory non esiste nella working dir   
+    printf("Directory insesistente\n");
+
+
+
+
+
 }

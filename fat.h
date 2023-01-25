@@ -12,6 +12,7 @@
 
 #define COLOR_RED       "\x1b[31m"
 #define COLOR_DEFAULT   "\x1b[0m"
+#define COLOR_GREEN     "\e[0;32m"
 #define COLOR_BOLD      "\e[1m"
 #define COLOR_OFF       "\e[m"
 #define COLOR_BLUE      "\x1b[34m"
@@ -105,3 +106,10 @@ void write_on_disk(void*, int);
 void printFAT();
 
 int cmpInput(char*, char *);
+
+//elenca il contenuto della directory passata come parametro, 
+//se non fornita elenca il contenuto della directory di lavoro
+void listDir(DirectoryEntry*);
+
+//cambia la directory di lavoro, modifico la working dir
+void changeDir(char*);
