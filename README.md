@@ -84,11 +84,11 @@ Come già descritto la `directory entry` rappresenta un singolo record della `di
 
 |offset (byte)|size (byte)|descrizione|
 |-------------|-----------|:----------|
-|0|12|nome|
-|12|8|data di creazione (in millisecondi)|
-|20|8|data di modifica (in millisecondi)|
-|28|2|primo cluster|
-|30|2|dimensione (se uguale a zero si tratta di una `sub-directory`)|
+|0|8|data di creazione (in millisecondi)|
+|8|8|data di modifica (in millisecondi)|
+|16|2|primo cluster|
+|18|2|dimensione (se uguale a zero si tratta di una `sub-directory`)|
+|20|12|nome|
 
 ### Data Area
 Spazio riservato allo storage vero e proprio dei files e delle `Directory Table`, rappresentative delle sub-directory della root, e viene suddiviso in cluster.

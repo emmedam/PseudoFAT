@@ -7,7 +7,16 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <math.h>
+#include <regex.h>   
 #include "utils.c"
+
+#define COLOR_RED       "\x1b[31m"
+#define COLOR_DEFAULT   "\x1b[0m"
+#define COLOR_BOLD      "\e[1m"
+#define COLOR_OFF       "\e[m"
+#define COLOR_BLUE      "\x1b[34m"
+#define COLOR_BOLD_BLUE "\e[1;5;34m"
+
 
 #define BYTE_PER_SECTOR             32 //rimane fisso
 #define SECTOR_PER_CLUSTER          100
@@ -30,11 +39,11 @@ typedef struct{
 }BootRecord;
 
 typedef struct{
-    char        name[12];
     time_t      creation_date;
     time_t      update_date;
     u_int16_t   first_cluster;
     u_int16_t   dimension;
+    char        name[12];
 }DirectoryEntry;
 
 // typedef struct{
@@ -92,3 +101,7 @@ size_t disk_length();
 
 //scrivo su disco 
 void write_on_disk(void*, int);
+
+void printFAT();
+
+int cmpInput(char*, char *);

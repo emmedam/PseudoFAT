@@ -1,5 +1,6 @@
 #include "fat.h"
 
+
 BootRecord *boot_record;
 
 void save(char*);
@@ -24,9 +25,7 @@ void* format(char *name){
     boot_record->n_directory_entries    = (u_int16_t)NUMBER_OF_DIRECTORY_ENTRIES;
     boot_record->date                   = (time_t)creation_time;
     strcpy(boot_record->name, name);
-    
-    
-    
+       
     printf("%d\n", boot_record->byte_per_sector);
     printf("%d\n", boot_record->sector_per_cluster);
     printf("%d\n", boot_record->n_cluster);
@@ -130,14 +129,11 @@ long dataAreaSectorNumber(){
 }
 
 void readDirEntry(DirectoryEntry *dir_entry, void* sector){
-    strcpy(dir_entry->name, (char*)(sector+0));
-    dir_entry->creation_date    = *(time_t*)(sector + 12);
-    dir_entry->update_date      = *(time_t*)(sector + 20);
-    dir_entry->first_cluster    = *(u_int16_t*)(sector + 14);
-    dir_entry->dimension        = *(u_int16_t*)(sector + 30);
-
-    printf("NAME: %s\n", dir_entry->name);
-
+    dir_entry->creation_date    = *(time_t*)(sector + 0);
+    dir_entry->update_date      = *(time_t*)(sector + 8);
+    dir_entry->first_cluster    = *(u_int16_t*)(sector + 16);
+    dir_entry->dimension        = *(u_int16_t*)(sector + 18);
+    strcpy(dir_entry->name, (char*)(sector + 20));
 }
 
 //trovo primo cluster libero nella FAT 
@@ -154,22 +150,36 @@ int get_free_cluster(){
 }
 
 
+
+
+void printDirectoryEntry(DirectoryEntry *d){
+    printf("name: %s\n", d -> name);
+    char *date = (char*)malloc(20 * sizeof(char));
+    printf("creation date: %s\n", formatTime(date,(d -> creation_date)));
+    printf("update date: %s\n", formatTime(date,(d -> update_date)));
+    printf("first cluster: %d\n", d -> first_cluster);
+    printf("dimension: %d\n", d -> dimension);
+    free(date);
+}
+
 void createDir(char* dirname){
     //controllo se directory già esiste
     DirectoryEntry *dir_entry = (DirectoryEntry*)malloc(sizeof(DirectoryEntry));
-    int first_free_sector = 0; 
+    int first_free_sector = 0;
+
     for(int i = 0; i < boot_record -> n_directory_entries; i++){
-        printf("name: %s\n", (char*)readSector(fatSectorNumber() + 1 + i));
-        readDirEntry(dir_entry, readSector(fatSectorNumber() + 1+ i));
+        readDirEntry(dir_entry, readSector(fatSectorNumber() + 1 + i));
         //printf("directory name[%d]: %s\n", i , (char*)dir_entry->name);
-        if(strcmp((char*)dir_entry -> name, dirname) == 0){
-            printf("Directory già esistente\n");
+        if(strcmp((dir_entry -> name), dirname) == 0){
+            printf(COLOR_RED "Directory già esistente\n" COLOR_DEFAULT );
+            printDirectoryEntry(dir_entry);
+            free(dir_entry);
             return;
         }
         // //per discriminare se settore sia vuoto, quindi non contiene 
         //nessuna dir entry, è sufficiente valutare se abbia valorizzato
         //l'attributo primo cluster
-        if(first_free_sector == 0  &&  dir_entry->first_cluster == 0){
+        if(first_free_sector == 0  &&  dir_entry -> first_cluster == 0){
             first_free_sector = fatSectorNumber() + 1 + i;
             //printf("first free sector: %d\n", first_free_sector);
             //printf("first cluster dir: %d\n", dir_entry->first_cluster);
@@ -181,41 +191,58 @@ void createDir(char* dirname){
     //vuol dire che la directory table è piena
     if(first_free_sector == 0){
         printf("La directory table è piena, impossibile aggiungere nuovi elementi\n");
+        free(dir_entry);
         return;
     }
 
-    //creo nuova direcotry
 
     //controllo se ho cluster liberi, altrimenti non posso creare nuove directory
     u_int16_t free_cluster = get_free_cluster();
     if(free_cluster == 0){
         printf("nessun cluster disponibile, impossibile creare nuove directory\n");
+        free(dir_entry);
         return;
     }
 
-    strcpy(dir_entry->name, dirname);
-    time_t creation_time        = time(0); 
-    dir_entry->creation_date    = dir_entry->update_date = creation_time;
+    //creo nuova direcotry
+    printf("Creo nuova directory, settore disponibile nella dir-entry: %d\n", first_free_sector);
+
+    time_t creation_time        = time(NULL); 
+    dir_entry->creation_date    = creation_time;
+    dir_entry->update_date      = creation_time;
     dir_entry->first_cluster    = free_cluster;
-    dir_entry->dimension        = 0;
+    dir_entry->dimension        = (u_int16_t)0;
+    strcpy(dir_entry->name, dirname);
     
     //printf("name: %s\n", dir_entry->name);
     
-    write_on_disk(dir_entry, first_free_sector);
+    printf("Write on disk %ld bytes\n", sizeof(*dir_entry));
+    printf("directory name: %s\n", dir_entry -> name);
+    // printf("cluster: %d\n", dir_entry -> first_cluster);
+
+    //scrivo sul disco la directory entry sullo spazio di memoria mappato
+    memcpy(readSector(first_free_sector), dir_entry, sizeof(*dir_entry));
+
+   
+
+    //Scrivo nella FAT il cluster della directory appena creata
+    u_int16_t last = 1;
+    memcpy( (disk + (boot_record->byte_per_sector + free_cluster * 2)) , &last, sizeof(u_int16_t));
+
     
+    free(dir_entry);
 }
 
-void write_on_disk(void *data, int offset){
-    strcpy(disk+offset, data);
-    // memcpy((disk + offset), data, sizeof(data));
-
-    //sincronizzo il file con la memoria
-    // if(msync(disk, disk_length(),  MS_SYNC) == -1){
-    //     perror("Sincronizzazione fallita: "); 
-    //     exit(EXIT_FAILURE);
-        
-    // }
-}
+// void printFAT(){
+//     for(int i=0; i < fatSectorNumber(); i++){
+//         char *sector = readSector(i+1);
+//         for(int j = 2; j < (boot_record->byte_per_sector) / 2; j++){
+//             if( *(sector + j  * 2) != 0){
+//                 printf("[%d]: %d\n", j, *(sector + j  * 2));
+//             }
+//         }
+//     }
+// }
 
 void save(char *name){
     FILE * fd_out=fopen(name, "wb");

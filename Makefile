@@ -3,7 +3,7 @@ CCOPTS=--std=gnu99 -g -Wall
 AR=ar
 
 
-BINS=main
+BINS=PseudoFAT
 
 OBJS=fat.c
 

@@ -6,6 +6,8 @@
         "fat.h": "c",
         "math.h": "c",
         "mman.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "ncurses.h": "c",
+        "stdio.h": "c"
     }
 }
