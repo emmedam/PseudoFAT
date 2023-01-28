@@ -1,5 +1,6 @@
 #include "fat.c"
 
+void print_path();
 
 int main(int argc, char** argv){
     init();
@@ -30,11 +31,8 @@ int main(int argc, char** argv){
     readBootRecord();
     char* token;
     while(1){
-        if(strcmp(working_dir->name, "root") != 0)
-            printf(COLOR_BOLD_BLUE "root/%s> " COLOR_OFF, working_dir->name);  
-        else  
-            printf(COLOR_BOLD_BLUE "%s> " COLOR_OFF, working_dir->name);
-        // fgets(input, sizeof input, stdin);
+        print_path(working_dir);
+        printf(COLOR_BOLD_BLUE "> " COLOR_OFF);
         scanf(" %[^\n]%*c", input);
         token = strtok(input, " ");
 
@@ -42,19 +40,19 @@ int main(int argc, char** argv){
             info();
         }
         
-        else if(strcmp(token, "createDir") == 0){
+        else if(strcmp(token, "createDir") == 0 || strcmp(token, "md") == 0){
             token = strtok(NULL, " ");
             createDir(token);
             
         }
     
-        else if(strcmp(token, "changeDir") == 0){
+        else if(strcmp(token, "changeDir") == 0|| strcmp(token, "cd") == 0){
             token = strtok(NULL, " ");
             changeDir(token);
         }
 
-        else if(strcmp(input, "listDir") == 0){
-            listDir(working_dir);
+        else if(strcmp(input, "listDir") == 0 || strcmp(token, "ld") == 0){
+            listDir(working_dir->dir_entry);
         }
 
         
@@ -79,14 +77,16 @@ int main(int argc, char** argv){
 
 }
 
-// int cmpInput(char *command, char *input){
-//     char* token;
 
-//     token = strtok(input, " ");
-//     if(strcmp(token, command) == 0){
-//         strcpy( strtok(NULL, " "), dir_name);
-//         return 1;
+// void print_path(){
+//     if(path_size(working_dir) == 1){
+//         printf(COLOR_BOLD_BLUE "root> " COLOR_OFF);
+//         return;
 //     }
-        
-//     return 0;
+//     while(working_dir != NULL){
+//         char *name = ((DirectoryEntry*)working_dir->dir_entry)->name;
+//         printf(COLOR_BOLD_BLUE "%s/> " COLOR_OFF, name);
+//         working_dir = working_dir->next; 
+
+//     }
 // }

@@ -7,7 +7,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <math.h>
-#include <regex.h>   
 #include "utils.c"
 
 #define COLOR_RED       "\x1b[31m"
@@ -52,7 +51,7 @@ typedef struct{
 // }disk_sector;
 
 
-
+void init();
 
 //alloca directoryTable
 // void* initDirTable();
@@ -113,3 +112,32 @@ void listDir(DirectoryEntry*);
 
 //cambia la directory di lavoro, modifico la working dir
 void changeDir(char*);
+
+
+//ritorna il primo settore di un cluster
+u_int16_t first_sector_of_cluster(u_int16_t);
+
+void init_root();
+
+
+/**********************LISTA**************************/
+typedef struct ListPath {
+  DirectoryEntry* dir_entry; 
+  struct ListPath* next;
+} ListPath;
+
+ListPath* list_init(DirectoryEntry*);
+
+void list_insert(ListPath* , ListPath* );
+
+DirectoryEntry* current_dir(ListPath* );
+
+int path_size(ListPath* );
+
+void print_path(ListPath*);
+
+void remove_last(ListPath *);
+
+int lenght(ListPath *);
+
+void reset_path(ListPath*);

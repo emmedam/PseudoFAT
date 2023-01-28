@@ -8,6 +8,7 @@
         "mman.h": "c",
         "stdlib.h": "c",
         "ncurses.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "unistd.h": "c"
     }
 }

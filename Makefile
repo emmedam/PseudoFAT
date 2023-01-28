@@ -7,7 +7,7 @@ BINS=PseudoFAT
 
 OBJS=fat.c
 
-HEADERS=fat.h
+HEADERS=fat.h utils.h linked_list.h
 
 LIBS=
 
