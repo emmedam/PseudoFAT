@@ -51,8 +51,15 @@ int main(int argc, char** argv){
             changeDir(token);
         }
 
-        else if(strcmp(input, "listDir") == 0 || strcmp(token, "ld") == 0){
+        else if(strcmp(input, "listDir") == 0 || strcmp(input, "ld") == 0){
             listDir(working_dir->dir_entry);
+        }
+
+        else if(strcmp(token, "createFile") == 0 || strcmp(token, "cf") == 0){
+            token = strtok(NULL, " ");
+            char* tmp_token = token;
+            token = strtok(NULL, " ");
+            createFile(tmp_token, atoi(token));
         }
 
         

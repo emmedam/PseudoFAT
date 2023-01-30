@@ -85,7 +85,7 @@ Come già descritto la `directory entry` rappresenta un singolo record della `di
 |offset (byte)|size (byte)|descrizione|
 |-------------|-----------|:----------|
 |0|8|data di creazione (in millisecondi)|
-|8|8|data di modifica (in millisecondi)|
+|8|8|data di modifica (in millisecondi) (se uguale a zero si tratta di una `sub-directory` altrimenti di un file)|
 |16|2|primo cluster|
 |18|2|dimensione (se uguale a zero si tratta di una `sub-directory`)|
 |20|12|nome|
