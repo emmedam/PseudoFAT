@@ -59,7 +59,16 @@ int main(int argc, char** argv){
             token = strtok(NULL, " ");
             char* tmp_token = token;
             token = strtok(NULL, " ");
+            if(!token){
+                printf(COLOR_RED "inserire dimensione file \n" COLOR_DEFAULT);
+                continue;
+            }
             createFile(tmp_token, atoi(token));
+        }
+
+        else if(strcmp(token, "read") == 0 ){
+            token = strtok(NULL, " ");
+            read_file(token);
         }
 
         

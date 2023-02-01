@@ -19,7 +19,7 @@
 
 
 #define BYTE_PER_SECTOR             32 //rimane fisso
-#define SECTOR_PER_CLUSTER          2
+#define SECTOR_PER_CLUSTER          1
 #define NUMBER_OF_CLUSTER           600
 #define NUMBER_OF_DIRECTORY_ENTRIES 50
 #define VOLUME_NAME                 "AFRODITE.fat"
@@ -122,6 +122,11 @@ void init_root();
 void createFile(char*, int);
 
 void write_on_fat(int, u_int16_t*);
+
+void write_on_data_area();
+
+//legge il contenuto del file passato come parametro e lo visualizza a schermo
+void read_file(char*);
 
 /**********************LISTA**************************/
 typedef struct ListPath {

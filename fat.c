@@ -21,7 +21,7 @@ void init(){
 void* format(char *name){
     
     time_t creation_time = time(NULL); 
-    printf("sizeof bootrecord %ld\n", sizeof(*boot_record));
+    // printf("sizeof bootrecord %ld\n", sizeof(*boot_record));
     boot_record->byte_per_sector        = (u_int16_t)BYTE_PER_SECTOR;
     boot_record->sector_per_cluster     = (u_int16_t)SECTOR_PER_CLUSTER;
     boot_record->n_cluster              = (u_int16_t)NUMBER_OF_CLUSTER;
@@ -29,11 +29,11 @@ void* format(char *name){
     boot_record->date                   = (time_t)creation_time;
     strcpy(boot_record->name, name);
        
-    printf("%d\n", boot_record->byte_per_sector);
-    printf("%d\n", boot_record->sector_per_cluster);
-    printf("%d\n", boot_record->n_cluster);
-    printf("%d\n", boot_record->n_directory_entries);
-    printf("name: %s\n", boot_record->name);
+    // printf("%d\n", boot_record->byte_per_sector);
+    // printf("%d\n", boot_record->sector_per_cluster);
+    // printf("%d\n", boot_record->n_cluster);
+    // printf("%d\n", boot_record->n_directory_entries);
+    // printf("name: %s\n", boot_record->name);
 
     save(name);
     
@@ -166,19 +166,29 @@ long dataAreaSectorNumber(){
 
 
 //trovo primo cluster libero nella FAT 
-int get_free_cluster(){
-    for(int i = 0; i < fatSectorNumber(); i++){
-        char *sector = readSector(i + 1);
-        for(int j = i * (boot_record->byte_per_sector / 2); 
-            j < (boot_record->byte_per_sector) / 2 * (i + 1); j++){
-            if((*(sector+j*2)) == 0)
-                return j;
-        }
+// int get_free_cluster(){
+//     for(int i = 0; i < fatSectorNumber(); i++){
+//         // char *sector = readSector(i + 1);
+//         for(int j = i * (boot_record->byte_per_sector / 2); 
+//             j < (boot_record->byte_per_sector) / 2 * (i + 1); j++){
+//             if(*(u_int16_t*)((readSector(i + 1) + j * 2))== 0)
+//                 return j;
+//         }
+//     }
+//     //FAT piena nessun cluster libero
+//     return 0;
+
+// }
+
+u_int16_t get_free_cluster(){
+    void *sector = readSector(1);
+    for(int i = 0; i < boot_record -> n_cluster; i++){
+        if((*(u_int16_t*)(sector + (i * 2))) == 0)
+            return (u_int16_t)i;
     }
     //FAT piena nessun cluster libero
     return 0;
 }
-
 
 
 
@@ -222,7 +232,7 @@ void createDir(char* dirname){
             free(dir_entry);
             return;
         }
-        // //per discriminare se settore sia vuoto, quindi non contiene 
+        //per discriminare se settore sia vuoto, quindi non contiene 
         //nessuna dir entry, è sufficiente valutare se abbia valorizzato
         //l'attributo primo cluster
         if(first_free_sector == 0  &&  dir_entry -> first_cluster == 0){
@@ -247,6 +257,7 @@ void createDir(char* dirname){
         free(dir_entry);
         return;
     }
+    printf("Primo cluster disponibile: %d\n", free_cluster);
 
     //creo nuova direcotry
     printf("Creo nuova directory, settore disponibile nella dir-entry: %d\n", first_free_sector);
@@ -344,29 +355,28 @@ void listDir(DirectoryEntry* dir){
             
             if(tmp_dir->update_date != 0){
                 printf("%s", tmp_dir->name);
+                //stampo la sequenza dei cluster memorizzati nella FAT 
+                u_int16_t curr_cluster = tmp_dir->first_cluster;
+                u_int16_t next_cluster = 0;
+                void* sector = readSector(1); 
+                printf("\t\t%d", curr_cluster);
+                while(1){
+                    next_cluster = *((u_int16_t*)(sector+ curr_cluster * 2));
+                    if(next_cluster == 1){
+                        printf("\n");
+                        break;
+                    }
+                    printf("-%d", next_cluster);
+                    curr_cluster = next_cluster;
+                }
             }
             else{
                 printf(COLOR_GREEN "%s" COLOR_DEFAULT, tmp_dir->name);
+                printf("\t\t%d\n", tmp_dir->first_cluster);
             }
-
-            //stampo la sequenza dei cluster memorizzati nella FAT 
-            u_int16_t curr_cluster = tmp_dir->first_cluster;
-            int sector = ceil(curr_cluster / (double)boot_record->byte_per_sector/2); 
-            printf("\t\t%d", curr_cluster);
-            while(1){
-                curr_cluster = *((u_int16_t*)(readSector( sector ) + curr_cluster * 2));
-                if(curr_cluster == 1){
-                    printf("\n");
-                   break;
-                }
-                printf("-%d", curr_cluster);
-                sector = ceil(curr_cluster / (double)boot_record->byte_per_sector/2); 
-            }
+            
             
         }
-
-            
-        
     }   
     free(tmp_dir);
 }
@@ -375,7 +385,7 @@ void listDir(DirectoryEntry* dir){
 void changeDir(char* dir_name){
     
     
-     if(!dir_name){
+    if(!dir_name){
         printf(COLOR_RED "fornire directory\n" COLOR_DEFAULT);
         return;
     }
@@ -419,6 +429,9 @@ void changeDir(char* dir_name){
 }
 
 void createFile(char* file_name, int dimension){
+    if (dimension <= 0)
+        dimension = 1;
+
     //verifico se la lunghezza di file_name è minore o uguale di 11 caratteri
     if(strlen(file_name) > 11){
         printf(COLOR_RED "Nome file non consentito, massimo 11 caratteri\n" COLOR_DEFAULT);
@@ -501,50 +514,49 @@ void createFile(char* file_name, int dimension){
     printf("Dimension: %d\n", dimension);
     printf("n_cluster: %d\n", n_cluster);
 
-
+    printf("Primo cluster disponibile: %d\n", free_cluster);
     int prev = 0;
     count = 0;
     u_int16_t data = 0;
-    // ciclo tra i settori della FAT
-    for(int i = 0; i < fatSectorNumber(); i++){ 
-        // ciclo tra gli elementi j del settore i-esimo della FAT
-        // j coincide con il numero di cluster
-        for(u_int16_t j = i * (boot_record->byte_per_sector/2); 
-            j < (boot_record->byte_per_sector)/2 * (i+1); j++){   
-
-            //printf("j: %d\n", j);
-
-            //printf("readSector(%d): %d\n", j, *((int*)readSector(j))  + i*2 );
-            if( *(u_int16_t*)((readSector(i + 1) + j * 2)) == 0 ){
+    void *sector = readSector(1);
+    for(int j = 0; j < boot_record -> n_cluster; j++){
+        if( (*(u_int16_t*)(sector + (j * 2))) == 0 ){
+           
+            void* dest = readSector(1 + fatSectorNumber() + dirTableSectorNumber() + j * boot_record->sector_per_cluster);
+            
+            if(count < n_cluster - 1)
                 //scrivo nella data area
-                memcpy( readSector(1 + fatSectorNumber() + dirTableSectorNumber() 
-                + j * boot_record->sector_per_cluster) , 
-                data_file + (count * dimension/n_cluster), dimension/n_cluster);
-                
+                memcpy(dest, 
+                    data_file + (count * boot_record->byte_per_sector * boot_record->sector_per_cluster),
+                    boot_record->byte_per_sector * boot_record->sector_per_cluster);
+            
+            if (n_cluster == 1){
+                 //scrivo nella data area
+                memcpy(dest, 
+                    data_file + (count * boot_record->byte_per_sector * boot_record->sector_per_cluster), 
+                    dimension - 1);
                 count++;
-                if (n_cluster == 1){
+                data = 1;
+                write_on_fat(j, &data);
+                break;
+            }
+
+            count++;
+            if(prev != 0){
+                data = j;
+                write_on_fat(prev, &data);
+                if(count == n_cluster){
+                     //scrivo nella data area
+                    memcpy( dest, 
+                        data_file + ((count - 1) * boot_record->sector_per_cluster *  boot_record->byte_per_sector),
+                        dimension - ((count - 1) * boot_record->sector_per_cluster *  boot_record->byte_per_sector));
                     data = 1;
                     write_on_fat(j, &data);
                     break;
                 }
-
-                if(prev != 0){
-                    data = j;
-                    //printf("prev: %d, data: %d\n", prev, data);
-                    write_on_fat(prev, &data);
-                    //scrivo nella fat
-                    if(count == n_cluster){
-                        data = 1;
-                        write_on_fat(j, &data);
-                        break;
-                    }
-                }
-                prev = j;        
             }
-    
+            prev = j;        
         }
-        if(count == n_cluster)
-            break;
     
     }
     free(dir_entry);
@@ -556,6 +568,36 @@ void createFile(char* file_name, int dimension){
 // che rappresenta la FAT
 void write_on_fat(int pos, u_int16_t* data){
     memcpy(readSector(1) + (pos * 2), data, sizeof(u_int16_t));
+}
+
+void read_file(char* file_name){
+    if(!file_name){
+        printf(COLOR_RED "fornire nome file da leggere\n" COLOR_DEFAULT);
+        return;
+    }
+
+    //trovo directory con nome file_name 
+    DirectoryEntry *tmp_dir = (DirectoryEntry*)malloc(sizeof(DirectoryEntry));
+    
+    u_int16_t n_sector;
+    if (current_dir(working_dir)->first_cluster == 0)
+        n_sector = 1 + fatSectorNumber();
+    else
+        n_sector = first_sector_of_cluster(current_dir(working_dir)->first_cluster);
+
+    int i = 0;
+    while(i < boot_record -> n_directory_entries && strcmp(tmp_dir->name, file_name) != 0){
+        readDirEntry(tmp_dir, readSector(n_sector+i));
+        i++;
+    }
+    
+    u_int16_t curr_cluster = tmp_dir->first_cluster;
+    u_int16_t next_cluster = 0;
+    void* sector = readSector(1 + fatSectorNumber() + dirTableSectorNumber() + 
+                            curr_cluster * boot_record->sector_per_cluster); 
+    printf(" %s\n", (char*)sector);
+    
+    free(tmp_dir);
 }
 
 /**********************LISTA************************/
