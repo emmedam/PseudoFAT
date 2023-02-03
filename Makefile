@@ -23,7 +23,7 @@ libpseudofat.a:	$(OBJS)
 				$(RM) $(OBJS)
 
 PseudoFAT: PseudoFAT.o $(LIBS)
-			$(CC) $(CCOPTS) -o $@ $^ -lm
+			$(CC) $(CCOPTS) -o $@ $^ -lm 
 
 clean:
 	rm -rf *.o *~ $(LIBS) $(BINS)

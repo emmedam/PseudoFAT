@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <math.h>
+#include <string.h>
 #include "utils.c"
 
 #define COLOR_RED       "\x1b[31m"
@@ -19,7 +20,7 @@
 
 
 #define BYTE_PER_SECTOR             32 //rimane fisso
-#define SECTOR_PER_CLUSTER          1
+#define SECTOR_PER_CLUSTER          100
 #define NUMBER_OF_CLUSTER           600
 #define NUMBER_OF_DIRECTORY_ENTRIES 50
 #define VOLUME_NAME                 "AFRODITE.fat"
@@ -85,10 +86,6 @@ void* format(char*);
 //leggo un settore 
 void* readSector(int);
 
-
-//leggo un cluster
-void readCluster();
-
 //quanti cluster liberi ci sono nella fat e numero di files
 void cluster_info(int *, int*);
 
@@ -128,6 +125,14 @@ void write_on_data_area();
 //legge il contenuto del file passato come parametro e lo visualizza a schermo
 void read_file(char*);
 
+//ritorna lo spazio rimanente nella data area
+int remaining_space();
+
+//elimina il file indicato dal parametro
+void erase_file(char*);
+
+//elimina la directory, indicata dal parametro
+void erease_dir(char*);
 /**********************LISTA**************************/
 typedef struct ListPath {
   DirectoryEntry* dir_entry; 
@@ -148,4 +153,4 @@ void remove_last(ListPath *);
 
 int lenght(ListPath *);
 
-void reset_path(ListPath*);
+ListPath* reset_path(ListPath*);

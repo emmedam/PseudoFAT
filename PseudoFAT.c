@@ -1,11 +1,9 @@
 #include "fat.c"
 
-void print_path();
 
 int main(int argc, char** argv){
     init();
     char input[50];
-    char dir_name[12];    
     
     if(argc == 1){
         printf("PseudoFAT, versione 1.0\n" 
@@ -31,7 +29,7 @@ int main(int argc, char** argv){
     readBootRecord();
     char* token;
     while(1){
-        print_path(working_dir);
+        print_path(path);
         printf(COLOR_BOLD_BLUE "> " COLOR_OFF);
         scanf(" %[^\n]%*c", input);
         token = strtok(input, " ");
@@ -52,7 +50,8 @@ int main(int argc, char** argv){
         }
 
         else if(strcmp(input, "listDir") == 0 || strcmp(input, "ld") == 0){
-            listDir(working_dir->dir_entry);
+            // listDir(working_dir->dir_entry);
+            listDir(current_dir(path));
         }
 
         else if(strcmp(token, "createFile") == 0 || strcmp(token, "cf") == 0){
@@ -69,6 +68,16 @@ int main(int argc, char** argv){
         else if(strcmp(token, "read") == 0 ){
             token = strtok(NULL, " ");
             read_file(token);
+        }
+
+        else if(strcmp(token, "ereaseFile") == 0 || strcmp(token, "rm") == 0){
+            token = strtok(NULL, " ");
+            erease_file(token);
+        }
+
+        else if(strcmp(token, "ereaseDir") == 0 || strcmp(token, "rmdir") == 0){
+            token = strtok(NULL, " ");
+            erease_dir(token);
         }
 
         
