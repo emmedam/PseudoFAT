@@ -58,16 +58,20 @@ int main(int argc, char** argv){
             token = strtok(NULL, " ");
             char* tmp_token = token;
             token = strtok(NULL, " ");
-            if(!token){
-                printf(COLOR_RED "inserire dimensione file \n" COLOR_DEFAULT);
-                continue;
-            }
-            createFile(tmp_token, atoi(token));
+            if(!token)
+                createFile(tmp_token, 0);
+            else
+                createFile(tmp_token, atoi(token));
         }
 
         else if(strcmp(token, "read") == 0 ){
             token = strtok(NULL, " ");
             read_file(token);
+        }
+
+        else if(strcmp(token, "write") == 0 ){
+            token = strtok(NULL, " ");
+            write_file(token);
         }
 
         else if(strcmp(token, "ereaseFile") == 0 || strcmp(token, "rm") == 0){
@@ -103,15 +107,3 @@ int main(int argc, char** argv){
 }
 
 
-// void print_path(){
-//     if(path_size(working_dir) == 1){
-//         printf(COLOR_BOLD_BLUE "root> " COLOR_OFF);
-//         return;
-//     }
-//     while(working_dir != NULL){
-//         char *name = ((DirectoryEntry*)working_dir->dir_entry)->name;
-//         printf(COLOR_BOLD_BLUE "%s/> " COLOR_OFF, name);
-//         working_dir = working_dir->next; 
-
-//     }
-// }

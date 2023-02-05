@@ -47,9 +47,13 @@ typedef struct{
     char        name[12];
 }DirectoryEntry;
 
-// typedef struct{
-//     char data[BYTE_PER_SECTOR];
-// }disk_sector;
+typedef struct{
+  //indica la posizione della dir_entry
+  void* entry_ptr;
+  void* start;
+  void* end;
+  void* seek;
+}FileHandle;
 
 
 void init();
@@ -125,6 +129,8 @@ void write_on_data_area();
 //legge il contenuto del file passato come parametro e lo visualizza a schermo
 void read_file(char*);
 
+void write_file(char*);
+
 //ritorna lo spazio rimanente nella data area
 int remaining_space();
 
@@ -133,6 +139,10 @@ void erase_file(char*);
 
 //elimina la directory, indicata dal parametro
 void erease_dir(char*);
+
+
+FileHandle* get_file_handle(char*);
+
 /**********************LISTA**************************/
 typedef struct ListPath {
   DirectoryEntry* dir_entry; 

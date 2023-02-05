@@ -438,9 +438,6 @@ int remaining_space(){
 
 }
 void createFile(char* file_name, int dimension){
-    if (dimension <= 0)
-        dimension = 1;
-
     
     //verifico se la lunghezza di file_name è minore o uguale di 11 caratteri
     if(strlen(file_name) > 11){
@@ -506,14 +503,6 @@ void createFile(char* file_name, int dimension){
         return;
     }
 
-    //alloco una porzione di memoria di pari alla dimensione, che verrà scritta nel file
-    char* data_file = (char*)malloc(dimension * sizeof(char));
-    for (int i = 0; i < dimension-1; i++) {
-        *(data_file + i) =  "Fatti non fummo a viver come bruti, ma a seguir virtude e canoscenza."[i % 69];
-        
-    }
-    *(data_file + dimension - 1) = '\0'; 
-    printf("contenuto del file: \n%s\n", data_file);
 
     u_int16_t free_cluster = get_free_cluster();
     if(free_cluster == 0){
@@ -531,57 +520,84 @@ void createFile(char* file_name, int dimension){
     //scrivo sul disco la directory entry sullo spazio di memoria mappato
     memcpy(readSector(first_free_sector), dir_entry, sizeof(*dir_entry));
     
+    // printf("Dimension: %d\n", dimension);
+    // printf("n_cluster: %d\n", n_cluster);
+
     printf("Dimension: %d\n", dimension);
-    printf("n_cluster: %d\n", n_cluster);
-
-    printf("Primo cluster disponibile: %d\n", free_cluster);
-    int prev = 0;
-    count = 0;
-    u_int16_t data = 0;
-    void *sector = readSector(1);
-    for(int j = 0; j < boot_record -> n_cluster; j++){
-        if( (*(u_int16_t*)(sector + (j * 2))) == 0 ){
-           
-            void* dest = readSector(1 + fatSectorNumber() + dirTableSectorNumber() + j * boot_record->sector_per_cluster);
+    if(dimension != 0){
+        //alloco una porzione di memoria di pari alla dimensione, che verrà scritta nel file
+        char* data_file = (char*)malloc(dimension * sizeof(char));
+        for (int i = 0; i < dimension-1; i++) {
+            *(data_file + i) =  "Fatti non fummo a viver come bruti, ma a seguir virtude e canoscenza."[i % 69];
             
-            if(count < n_cluster - 1)
-                //scrivo nella data area
-                memcpy(dest, 
-                    data_file + (count * boot_record->byte_per_sector * boot_record->sector_per_cluster),
-                    boot_record->byte_per_sector * boot_record->sector_per_cluster);
-            
-            if (n_cluster == 1){
-                 //scrivo nella data area
-                memcpy(dest, 
-                    data_file + (count * boot_record->byte_per_sector * boot_record->sector_per_cluster), 
-                    dimension);
-                    //dimension-1
-                count++;
-                data = 1;
-                write_on_fat(j, &data);
-                break;
-            }
+        }
+        *(data_file + dimension - 1) = '\0'; 
+        printf("contenuto del file: \n%s\n", data_file);
+    
 
-            count++;
-            if(prev != 0){
-                data = j;
-                write_on_fat(prev, &data);
-                if(count == n_cluster){
-                     //scrivo nella data area
-                    memcpy( dest, 
-                        data_file + ((count - 1) * boot_record->sector_per_cluster *  boot_record->byte_per_sector),
-                        dimension - ((count - 1) * boot_record->sector_per_cluster *  boot_record->byte_per_sector));
+        //printf("Primo cluster disponibile: %d\n", free_cluster);
+        int prev = 0;
+        count = 0;
+        u_int16_t data = 0;
+        void *sector = readSector(1);
+        for(int j = 0; j < boot_record -> n_cluster; j++){
+            if( (*(u_int16_t*)(sector + (j * 2))) == 0 ){
+                
+                void* dest = readSector(1 + fatSectorNumber() + dirTableSectorNumber() + j * boot_record->sector_per_cluster);
+                
+                if(count < n_cluster - 1)
+                    //scrivo nella data area
+                    memcpy(dest, 
+                        data_file + (count * boot_record->byte_per_sector * boot_record->sector_per_cluster),
+                        boot_record->byte_per_sector * boot_record->sector_per_cluster);
+                
+                if (n_cluster == 1){
+                    
+                    printf("dest: %d, j: %d\n", 1 + fatSectorNumber() + dirTableSectorNumber() + j * boot_record->sector_per_cluster, j);
+                    //scrivo nella data area
+                    memcpy(dest, 
+                        data_file + (count * boot_record->byte_per_sector * boot_record->sector_per_cluster), 
+                        dimension);
+                    count++;
                     data = 1;
                     write_on_fat(j, &data);
                     break;
                 }
+
+                count++;
+                if(prev != 0){
+                    data = j;
+                    write_on_fat(prev, &data);
+                    if(count == n_cluster){
+                        //scrivo nella data area
+                        memcpy( dest, 
+                            data_file + ((count - 1) * boot_record->sector_per_cluster *  boot_record->byte_per_sector),
+                            dimension - ((count - 1) * boot_record->sector_per_cluster *  boot_record->byte_per_sector));
+                        data = 1;
+                        write_on_fat(j, &data);
+                        break;
+                    }
+                }
+                prev = j;        
             }
-            prev = j;        
+        
         }
-    
+        free(data_file);
     }
+    else{
+        u_int16_t data = 1;
+        void *sector = readSector(1);
+        for(int j = 0; j < boot_record -> n_cluster; j++){
+            if( (*(u_int16_t*)(sector + (j * 2))) == 0 ){
+                write_on_fat(j, &data);
+                break;
+            }
+            
+        }
+    }
+
     free(dir_entry);
-    free(data_file);
+
 
 }
 
@@ -653,6 +669,155 @@ void read_file(char* file_name){
     
     free(tmp_dir);
     free(res);
+}
+
+void write_file(char* file_name){
+    if(!file_name){
+        printf(COLOR_RED "fornire nome file da leggere\n" COLOR_DEFAULT);
+        return;
+    }
+
+
+    FileHandle* file_handle = (FileHandle*)malloc(sizeof(FileHandle));
+    file_handle = get_file_handle(file_name);
+    if(file_handle == NULL){
+        printf(COLOR_RED "errore, file handle non disponibile\n" COLOR_DEFAULT);
+        free(file_handle);
+        return;
+    }
+
+
+    DirectoryEntry* tmp_dir = (DirectoryEntry*)malloc(sizeof(DirectoryEntry));
+    readDirEntry(tmp_dir, file_handle->entry_ptr);
+
+
+    char* text = malloc(60000 * sizeof(char));
+    printf("Cosa vuoi scrivere?\n");
+    scanf("%[^\n]%*c", text);
+    *(text + (strlen(text)+1)) = '\0';
+    //text = (char*)malloc(strlen(text) * sizeof(char));
+    
+    
+    // if(strlen(text) > remaining_space()){
+    //     //bisogna aumentare spazio
+    // }
+
+    
+    //controllo se stringa entra in un cluster
+    // if(tmp_dir->dimension + strlen(text) + 1 < boot_record->byte_per_sector){
+    //     memcpy(file_handle->end, text , strlen(text)+1);
+
+    //     //aggiorno data di modifica e dimensione file
+    //     tmp_dir->dimension += strlen(text) + 1;
+    //     memcpy(file_handle->entry_ptr, tmp_dir, sizeof(*tmp_dir));
+        
+    //     free(text);
+    //     free(tmp_dir);
+    //     free(file_handle);
+    //     return;
+    // }
+    
+    //conto il numero di cluster necessari per memorizzare il file
+    u_int16_t n_cluster = ceil( strlen(text) / (double)(boot_record->sector_per_cluster * boot_record->byte_per_sector));
+    
+    //recupero ultimo cluster nella FAT
+    u_int16_t curr_cluster = tmp_dir->first_cluster;
+    u_int16_t next_cluster = 0;
+    void* sector = readSector(1); 
+
+    while(1){
+        next_cluster = *((u_int16_t*)(sector + curr_cluster * 2));
+        if(next_cluster == 1){
+            break;
+        }
+        curr_cluster = next_cluster;
+    }
+
+    //scrivo nella FAT e nella data area
+    int count = 0;
+    u_int16_t data = 0;
+    u_int16_t free_cluster = 0;
+    void* dest;
+
+    for(u_int16_t i = 0; i < boot_record -> n_cluster; i++){
+        
+        if( (*(u_int16_t*)(sector + (i * 2))) == 0 ){
+            
+            if(tmp_dir->dimension == 0)
+                dest = file_handle->end + count;
+            else
+                dest = file_handle->end - 1 + count;                            
+            
+            if(count == n_cluster){
+                //scrivo nella data area
+                memcpy( dest, 
+                    text + ((count - 1) * boot_record->sector_per_cluster *  boot_record->byte_per_sector),
+                    (strlen(text) + 1) - ((count - 1) * boot_record->sector_per_cluster *  boot_record->byte_per_sector));
+                data = 1;
+                write_on_fat(curr_cluster, &data);
+                break;
+            }
+            
+            if(count < n_cluster - 1)
+                //scrivo nella data area
+                memcpy(dest, 
+                    text + (count * boot_record->byte_per_sector * boot_record->sector_per_cluster),
+                    boot_record->byte_per_sector * boot_record->sector_per_cluster);
+            
+            write_on_fat(curr_cluster, &i);
+            count++;
+            curr_cluster = i;    
+        
+        }
+    }
+    
+    
+
+    //aggiorno data di modifica e dimensione file
+    tmp_dir->dimension += strlen(text) + 1;
+    memcpy(file_handle->entry_ptr, tmp_dir, sizeof(*tmp_dir));
+
+
+    printf("modifica effettuata\n");
+    //dealloco tutto
+    free(text);
+    free(tmp_dir);
+    free(file_handle);
+
+
+}
+FileHandle* get_file_handle(char* file_name){
+    DirectoryEntry* tmp_dir = (DirectoryEntry*)malloc(sizeof(DirectoryEntry));
+    
+    FileHandle* file_handle = (FileHandle*)malloc(sizeof(FileHandle));
+    u_int16_t n_sector;
+    if (current_dir(path)->first_cluster == 0)
+        n_sector = 1 + fatSectorNumber();
+    else
+        n_sector = first_sector_of_cluster(current_dir(path)->first_cluster);
+
+    int i;
+    for(i= 0; i < boot_record -> n_directory_entries; i++){
+        readDirEntry(tmp_dir, readSector(n_sector + i));
+        if (strcmp(tmp_dir->name, file_name) == 0 && tmp_dir->update_date != 0){
+            file_handle->entry_ptr = readSector(n_sector + i);
+            break;
+        }
+    }
+
+    if (i == boot_record -> n_directory_entries){
+        free(tmp_dir);
+        free(file_handle);
+        return NULL;
+    }
+
+    int start = 1 + fatSectorNumber() + dirTableSectorNumber() 
+        + (tmp_dir->first_cluster * boot_record->sector_per_cluster);
+    file_handle->start = readSector(start);
+    file_handle->end = readSector( start) + tmp_dir->dimension - 1;
+
+    return file_handle;
+
 }
 
 void erease_file(char* file_name){
