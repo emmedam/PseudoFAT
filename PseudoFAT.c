@@ -1,12 +1,13 @@
 #include "fat.c"
 
 
+
 int main(int argc, char** argv){
     init();
     char input[50];
     
     if(argc == 1){
-        printf("PseudoFAT, versione 1.0\n" 
+        printf("PseudoFAT\n" 
                "Utilizzo: $./PseudoFAT [Disk Name]\n\n"
                "-help per consultare la lista dei comandi;\n" 
                "-help [command] per maggiori informazioni sul comando;\n\n"
@@ -50,7 +51,7 @@ int main(int argc, char** argv){
         }
 
         else if(strcmp(input, "listDir") == 0 || strcmp(input, "ld") == 0){
-            // listDir(working_dir->dir_entry);
+            //listDir(path->dir_entry);
             listDir(current_dir(path));
         }
 
@@ -66,25 +67,38 @@ int main(int argc, char** argv){
 
         else if(strcmp(token, "read") == 0 ){
             token = strtok(NULL, " ");
-            read_file(token);
+            printf("%s\n", read_file(token));
         }
 
         else if(strcmp(token, "write") == 0 ){
-            token = strtok(NULL, " ");
-            write_file(token);
+            char* name = strtok(NULL, " ");
+            token = strtok(NULL, "");
+            DirectoryEntry* dir_entry = get_dir_entry(name);
+            if(!dir_entry){
+                printf("file inesistente\n");
+            }
+            else{
+                FileHandle* fe = get_file_handle(dir_entry);
+                printf("strcat: %s\n", strcat(read_file(fe->entry->name), token));
+                write_file(strcat(read_file(fe->entry->name), token), fe);
+                free(fe);
+            }
         }
 
-        else if(strcmp(token, "ereaseFile") == 0 || strcmp(token, "rm") == 0){
+        else if(strcmp(token, "eraseFile") == 0 || strcmp(token, "rm") == 0){
             token = strtok(NULL, " ");
-            erease_file(token);
+            erase_file(token);
         }
 
-        else if(strcmp(token, "ereaseDir") == 0 || strcmp(token, "rmdir") == 0){
+        else if(strcmp(token, "eraseDir") == 0 || strcmp(token, "rmdir") == 0){
             token = strtok(NULL, " ");
-            erease_dir(token);
+            erase_dir(token);
         }
 
-        
+        else if(strcmp(token, "format") == 0){
+            // TODO chiedere conferma prima di format
+            format(boot_record -> name);
+        }
 
         else if (strcmp(input, "exit") == 0)
             break;

@@ -10,6 +10,8 @@
 #include <string.h>
 #include "utils.c"
 
+
+
 #define COLOR_RED       "\x1b[31m"
 #define COLOR_DEFAULT   "\x1b[0m"
 #define COLOR_GREEN     "\e[0;32m"
@@ -25,10 +27,7 @@
 #define NUMBER_OF_DIRECTORY_ENTRIES 50
 #define VOLUME_NAME                 "AFRODITE.fat"
 
-typedef enum {FREE = 0, LAST = 1} statusCluster;
-
-//riferimento al volume di lavoro mappato in memoria
-void *disk;
+enum type {FILE_FAT = 0, DIRECTORY_FAT = 1};
 
 typedef struct{
     u_int16_t   byte_per_sector;
@@ -49,14 +48,19 @@ typedef struct{
 
 typedef struct{
   //indica la posizione della dir_entry
-  void* entry_ptr;
+  DirectoryEntry* entry;
   void* start;
   void* end;
   void* seek;
 }FileHandle;
 
 
+
+/*********************************************/
+
 void init();
+
+void save(char*);
 
 //alloca directoryTable
 // void* initDirTable();
@@ -109,7 +113,7 @@ int cmpInput(char*, char *);
 
 //elenca il contenuto della directory passata come parametro, 
 //se non fornita elenca il contenuto della directory di lavoro
-void listDir(DirectoryEntry*);
+void listDir();
 
 //cambia la directory di lavoro, modifico la working dir
 void changeDir(char*);
@@ -122,14 +126,16 @@ void init_root();
 
 void createFile(char*, int);
 
+DirectoryEntry* set_file(char*);
+
 void write_on_fat(int, u_int16_t*);
 
 void write_on_data_area();
 
 //legge il contenuto del file passato come parametro e lo visualizza a schermo
-void read_file(char*);
+char* read_file(char*);
 
-void write_file(char*);
+DirectoryEntry* write_file(char*, FileHandle*);
 
 //ritorna lo spazio rimanente nella data area
 int remaining_space();
@@ -138,16 +144,30 @@ int remaining_space();
 void erase_file(char*);
 
 //elimina la directory, indicata dal parametro
-void erease_dir(char*);
+void erase_dir(char*);
 
 
-FileHandle* get_file_handle(char*);
+FileHandle* get_file_handle(DirectoryEntry*);
 
+
+void readDisk(char*);
+
+void* seek(FileHandle*, int);
+
+u_int16_t sector_current_dir();
+
+DirectoryEntry* set_dir_entry(char*, enum type);
+
+void clear_fat(u_int16_t);
+
+void* get_dir_entry(char* name);
 /**********************LISTA**************************/
 typedef struct ListPath {
   DirectoryEntry* dir_entry; 
   struct ListPath* next;
 } ListPath;
+
+
 
 ListPath* list_init(DirectoryEntry*);
 

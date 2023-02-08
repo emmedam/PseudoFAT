@@ -120,21 +120,59 @@ Il programma si utilizza da terminale, in ambiente **linux**, e si avvia con il 
 
 il parametro `diskname` (max 12 caratteri) indica il nome del disco sul quale lavorare, se non esiste si crea un nuovo disco altrimenti mappa in memoria quello passato come parametro.
 
-|comando |sintassi |descrizione|
+|comando|sintassi |descrizione|
 |:-------|:--------|:----------|
-|`changeDir`|`changeDir [dirname]`|cambia la `directory` di lavoro come indicato dal parametro `dirname`|
-|`createDir`|`createDir [dirname]`|crea una sub-directory, della `directory` di lavoro, utilizzando il nome passato nel parametro `dirname`|
-|`createFile`|`createFile [filename]`|crea un file di testo vuoto con il nome fornito dal parametro `filename`|
-|`eraseDir`|`eraseDir [dirname]`|elimina la directory, indicata dal parametro `dirname`, e ricorsivamente tutto il suo contenuto (`sub-directory` incluse)|
-|`eraseFile`|`eraseFile [filename]`|elimina il file indicato dal parametro `filename`|
+|`changeDir`|`changeDir/cd [dirname]`|cambia la `directory` di lavoro come indicato dal parametro `dirname`|
+|`createDir`|`createDir/md [dirname]`|crea una sub-directory, della `directory` di lavoro, utilizzando il nome passato nel parametro `dirname`|
+|`createFile`|`createFile/cf [filename]`|crea un file di testo vuoto con il nome fornito dal parametro `filename`|
+|`eraseDir`|`eraseDir/rd [dirname]`|elimina la directory, indicata dal parametro `dirname`, e ricorsivamente tutto il suo contenuto (`sub-directory` incluse)|
+|`eraseFile`|`eraseFile/rf [filename]`|elimina il file indicato dal parametro `filename`|
 |`exit`|`exit`|chiude il programma e salva il filesystem di lavoro sul file con il nome del disco|
 |`format`|`format`|formatta il disco di lavoro|
-|`info`|`info`|elenca a video informazioni sul volume di lavoro|
-|`read`|`read [filename]`|legge il contenuto del file passato come parametro e lo visualizza a schermo|
-|`help`|`help [command]`|fornisce una descrizione del comando passato come parametro, se non fornito elenca i comandi disponibili|
-|`listDir`|`listDir [dirname]`|elenca il contenuto della directory passata come parametro, se non fornita elenca il contenuto della directory di lavoro|
+|`info`|`info/i`|elenca a video informazioni sul volume di lavoro|
+|`read`|`read/r [filename]`|legge il contenuto del file passato come parametro e lo visualizza a schermo|
+|`help`|`help/h [command]`|fornisce una descrizione del comando passato come parametro, se non fornito elenca i comandi disponibili|
+|`listDir`|`listDir/ld]`|elenca il contenuto della directory di lavoro|
 |`seek`|?|?|
-|`write`|`write [filename] [content]`|scrive nel file di testo, indicato dal parametro `filename`, il contenuto del parametro `content`. Se il file non esiste lo crea|
+|`write`|`write/w [filename] [content]`|scrive nel file di testo, indicato dal parametro `filename`, il contenuto del parametro. `content`. Se il file non esiste lo crea|
+
+
+### Activity
+
+#### Creazione di un file
+Parametri necessari: nome del file.
+Per la creazione di un file, nella directory di lavoro, si verifica preliminarmente la disponibilità di una entry libera nella Directory Table, quindi la lunghezza del nome e che non esista una entry con lo stesso nome.
+Fatte queste verifiche si inserisce una nuova entry.
+
+#### Scrittura di un file
+Parametri necessari: entry del file e il contenuto da scrivere.
+Per la scrittura di un file è necessario, come precondizione, che il file esista come entry nella Directory Table.
+Calcolata la dimensione del contenuto da scrivere si calcola quanti cluster siano necessari per la sua allocazione e si verifica che ce ne siano liberi nella FAT, quindi si scrive sui cluster facendo in modo che l'ultimo carattere sia seguito da un carattere di fine stringa NIL (nel nostro modello questo rappresenta la fine del file).
+Contestualmente alla scrittura del contenuto nei cluster disponibili si aggiornerà anche la FAT.
+Completata la scrittura si aggiorna la entry con la dimensione (nella quale bisogna si include il carattere di fine file) e la data di modifica.
+
+### Strutture dati utilizzate
+Le principali strutture dati utilizzate nel programma
+
+![Strutture dati](structs.png)
+
+### Esempio della rappresentazione in memoria del volume
+
+Di seguito si mostra il dump della memoria che rappresenta un volume creato secondo i seguenti parametri:
+```
+..parametri disco..e ecc
+```
+e la seguente struttuta
+
+```
+/root
+|---dir1
+|---dir2
+|  |---file_1.txt
+|  |---file_2.txt
+|---dir3
+```
+![Strutture dati](dump.png)
 
 
 Fonti:
