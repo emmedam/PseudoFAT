@@ -1,3 +1,4 @@
+#pragma once
 #include <time.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,8 +9,8 @@
 #include <unistd.h>
 #include <math.h>
 #include <string.h>
-#include "utils.c"
-
+#include "utils.h"
+#include "linked_list.h"
 
 
 #define COLOR_RED       "\x1b[31m"
@@ -29,7 +30,7 @@
 
 enum type {FILE_FAT = 0, DIRECTORY_FAT = 1};
 
-typedef struct{
+typedef struct BootRecord{
     u_int16_t   byte_per_sector;
     u_int16_t   sector_per_cluster;
     u_int16_t   n_cluster;
@@ -38,7 +39,7 @@ typedef struct{
     char        name[12];
 }BootRecord;
 
-typedef struct{
+typedef struct DirectoryEntry{
     time_t      creation_date;
     time_t      update_date;
     u_int16_t   first_cluster;
@@ -46,7 +47,7 @@ typedef struct{
     char        name[12];
 }DirectoryEntry;
 
-typedef struct{
+typedef struct FileHandle{
   //indica la posizione della dir_entry
   DirectoryEntry* entry;
   void* start;
@@ -54,7 +55,14 @@ typedef struct{
   void* seek;
 }FileHandle;
 
+typedef struct ListPath ListPath;
 
+//riferimento al volume di lavoro mappato in memoria
+extern void *disk;
+
+//lista concatenata che rappresenta la working_dir
+extern ListPath* path;
+extern BootRecord *boot_record;
 
 /*********************************************/
 
@@ -89,7 +97,7 @@ void print_bootRecord(BootRecord*);
 void info();
 
 //formatta il disco di lavoro
-void* format(char*);
+void format(char*);
 
 //leggo un settore 
 void* readSector(int);
@@ -161,26 +169,3 @@ DirectoryEntry* set_dir_entry(char*, enum type);
 void clear_fat(u_int16_t);
 
 void* get_dir_entry(char* name);
-/**********************LISTA**************************/
-typedef struct ListPath {
-  DirectoryEntry* dir_entry; 
-  struct ListPath* next;
-} ListPath;
-
-
-
-ListPath* list_init(DirectoryEntry*);
-
-void list_insert(ListPath* , ListPath* );
-
-DirectoryEntry* current_dir(ListPath* );
-
-int path_size(ListPath* );
-
-void print_path(ListPath*);
-
-void remove_last(ListPath *);
-
-int lenght(ListPath *);
-
-ListPath* reset_path(ListPath*);

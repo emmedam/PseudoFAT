@@ -1,6 +1,4 @@
-#include <time.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include "utils.h"
 
 char* formatTime(char * str, time_t t){
     struct tm *ptm = localtime(&t);

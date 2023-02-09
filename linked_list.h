@@ -1,23 +1,25 @@
-// #include "fat.h"
+#pragma once
+#include "fat.h"
 
-// typedef struct ListPath {
-//   DirectoryEntry* dir_entry; 
-//   struct ListPath* next;
-// } ListPath;
+typedef struct DirectoryEntry DirectoryEntry;
 
-// ListPath* list_init(DirectoryEntry*);
+typedef struct ListPath {
+  DirectoryEntry* dir_entry; 
+  struct ListPath* next;
+} ListPath;
 
-// void list_insert(ListPath* , ListPath* );
+ListPath* list_init(DirectoryEntry*);
 
-// DirectoryEntry* current_dir(ListPath* );
+void list_insert(ListPath* , ListPath* );
 
-// int path_size(ListPath* );
+DirectoryEntry* current_dir(ListPath* );
 
-// void print_path(ListPath*);
+int path_size(ListPath* );
 
-// void remove_last(ListPath *);
+void print_path(ListPath*);
 
-// int lenght(ListPath *);
+void remove_last(ListPath *);
 
-// ListPath* reset_path(ListPath*);
+int lenght(ListPath *);
 
+ListPath* reset_path(ListPath*);

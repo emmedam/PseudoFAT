@@ -2,13 +2,15 @@ CC=gcc
 CCOPTS=--std=gnu99 -g -Wall 
 AR=ar
 
-OBJS=fat.o
+OBJS=fat.o\
+	linked_list.o\
+	utils.o
 
 HEADERS=fat.h utils.h linked_list.h
 
 LIBS=libpseudofat.a
 
-BINS=PseudoFAT
+BINS=PseudoFAT 
 
 phony: clean all
 
@@ -24,6 +26,8 @@ libpseudofat.a:	$(OBJS)
 
 PseudoFAT: PseudoFAT.o $(LIBS)
 			$(CC) $(CCOPTS) -o $@ $^ -lm 
+
+
 
 clean:
 	rm -rf *.o *~ $(LIBS) $(BINS)

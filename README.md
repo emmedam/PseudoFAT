@@ -33,7 +33,7 @@ Nel nostro modello si utilizza un sottoinsieme delle funzionalità e dei dati de
 ## Rappresentazione dello spazio
 Lo spazio virtuale, mappato in memoria, che modella il "disco fisico" viene suddiviso come segue
 
-![Rappresentazione del disco](disk.png)
+![Rappresentazione del disco](doc/disk.png)
 
 ### Boot record
 Occupa il primo settore del volume e conserva informazioni generali, come di seguito descritto.
@@ -154,7 +154,7 @@ Completata la scrittura si aggiorna la entry con la dimensione (nella quale biso
 ### Strutture dati utilizzate
 Le principali strutture dati utilizzate nel programma
 
-![Strutture dati](structs.png)
+![Strutture dati](doc/structs.png)
 
 ### Esempio della rappresentazione in memoria del volume
 
@@ -172,7 +172,7 @@ e la seguente struttuta
 |  |---file_2.txt
 |---dir3
 ```
-![Strutture dati](dump.png)
+![Strutture dati](doc/dump.png)
 
 
 Fonti:

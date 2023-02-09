@@ -29,6 +29,7 @@ int main(int argc, char** argv){
     readDisk(f_name);
     readBootRecord();
     char* token;
+    char* read_text;
     while(1){
         print_path(path);
         printf(COLOR_BOLD_BLUE "> " COLOR_OFF);
@@ -37,6 +38,11 @@ int main(int argc, char** argv){
 
         if(strcmp(input, "info") == 0){
             info();
+        }
+        
+        else if(strcmp(token, "help") == 0 || strcmp(token, "h") == 0){
+            token = strtok(NULL, " ");
+            help(token);
         }
         
         else if(strcmp(token, "createDir") == 0 || strcmp(token, "md") == 0){
@@ -67,21 +73,26 @@ int main(int argc, char** argv){
 
         else if(strcmp(token, "read") == 0 ){
             token = strtok(NULL, " ");
-            printf("%s\n", read_file(token));
+            read_text = read_file(token);
+            if (read_text){
+                printf("%s\n", read_text);
+                free(read_text);
+            }
         }
 
         else if(strcmp(token, "write") == 0 ){
-            char* name = strtok(NULL, " ");
-            token = strtok(NULL, "");
-            DirectoryEntry* dir_entry = get_dir_entry(name);
+    
+            DirectoryEntry* dir_entry = get_dir_entry(strtok(NULL, " "));
             if(!dir_entry){
                 printf("file inesistente\n");
             }
             else{
+                token = strtok(NULL, "");
                 FileHandle* fe = get_file_handle(dir_entry);
-                printf("strcat: %s\n", strcat(read_file(fe->entry->name), token));
-                write_file(strcat(read_file(fe->entry->name), token), fe);
+                read_text = read_file(fe->entry->name);
+                write_file(strcat(read_text, token), fe);
                 free(fe);
+                free(read_text);
             }
         }
 
@@ -96,15 +107,24 @@ int main(int argc, char** argv){
         }
 
         else if(strcmp(token, "format") == 0){
+            char *answer = (char *)malloc(sizeof(char));
             // TODO chiedere conferma prima di format
-            format(boot_record -> name);
+            printf("Sei sicuro di voler formattare il disco? tutti i tuoi dati andranno persi[si/no]\n");
+            scanf("%[^\n]%*c", answer);
+            if(strcmp(answer, "si") == 0){
+                format(boot_record->name);
+            }
+            else if(strcmp(answer, "no") != 0 || strcmp(answer, "si") != 0 ){
+                printf("comando non valido\n");
+            }
+            free(answer);
         }
 
         else if (strcmp(input, "exit") == 0)
             break;
         
         else{
-            printf("comando sconosciuto\n");
+            printf("comando sconosciuto, per maggiori informazioni consultare help\n");
         }
 
 

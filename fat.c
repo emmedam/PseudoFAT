@@ -9,127 +9,12 @@ void *disk;
 // della directory di lavoro o working dir
 ListPath *path;
 
-void init()
-{
-
+void init(){
     boot_record = (BootRecord *)malloc(sizeof(BootRecord));
 }
 
-// void OLD_write_file(char* file_name){
-//     if(!file_name){
-//         printf(COLOR_RED "fornire nome file da leggere\n" COLOR_DEFAULT);
-//         return;
-//     }
 
-//     FileHandle* file_handle = get_file_handle(file_name);
-//     if(file_handle == NULL){
-//         printf(COLOR_RED "file non disponibile\n" COLOR_DEFAULT);
-//         return;
-//     }
-
-//     DirectoryEntry* tmp_dir = (DirectoryEntry*)malloc(sizeof(DirectoryEntry));
-//     readDirEntry(tmp_dir, file_handle->entry_ptr);
-
-//     char* text; // = malloc(remaining_space() * sizeof(char));
-//     printf("Cosa vuoi scrivere?\n");
-//     //scanf("%[^\n]%*c", &text);
-//     // *(text + (strlen(text)+1)) = '\0';
-
-//     //text = (char*)malloc(strlen(text) * sizeof(char));
-
-//     // if(strlen(text) + 1 > remaining_space()){
-//     //      //bisogna aumentare spazio
-//     // }
-
-//     //controllo se stringa entra in un cluster
-//     // if(tmp_dir->dimension + strlen(text) + 1 < boot_record->byte_per_sector){
-//     //     memcpy(file_handle->end, text , strlen(text)+1);
-
-//     //     //aggiorno data di modifica e dimensione file
-//     //     tmp_dir->dimension += strlen(text) + 1;
-//     //     memcpy(file_handle->entry_ptr, tmp_dir, sizeof(*tmp_dir));
-
-//     //     free(text);
-//     //     free(tmp_dir);
-//     //     free(file_handle);
-//     //     return;
-//     // }
-
-//     //conto il numero di cluster necessari per memorizzare il file
-//     u_int16_t n_cluster = ceil( (strlen(text) + 1) /
-//         (double)(boot_record->sector_per_cluster * boot_record->byte_per_sector));
-
-//     //recupero ultimo cluster nella FAT
-//     u_int16_t curr_cluster = tmp_dir->first_cluster;
-//     u_int16_t next_cluster = 0;
-//     void* sector = readSector(1);
-
-//     while(1){
-//         next_cluster = *((u_int16_t*)(sector + curr_cluster * 2));
-//         if(next_cluster == 1){
-//             break;
-//         }
-//         curr_cluster = next_cluster;
-//     }
-
-//     //scrivo nella FAT e nella data area
-//     int count = 0;
-//     u_int16_t data = 0;
-//     u_int16_t free_cluster = 0;
-//     void* dest;
-
-//     for(u_int16_t i = 0; i < boot_record -> n_cluster; i++){
-
-//         if( (*(u_int16_t*)(sector + (i * 2))) == 0 ){
-
-//             if(tmp_dir->dimension == 0)
-//                 dest = file_handle->end + count + 1;
-//             else
-//                 dest = file_handle->end + count - 1;
-
-//             if(n_cluster == 1 && tmp_dir->dimension + strlen(text) + 1 < boot_record->byte_per_sector ){
-
-//                 memcpy(dest, text, strlen(text) + 1);
-//                 break;
-//             }
-
-//             if(count == n_cluster){
-//                 //scrivo nella data area
-//                 memcpy( dest,
-//                     text + ((count - 1) * boot_record->sector_per_cluster *  boot_record->byte_per_sector),
-//                     (strlen(text) + 1) - ((count - 1) * boot_record->sector_per_cluster *  boot_record->byte_per_sector));
-//                 data = 1;
-//                 write_on_fat(curr_cluster, &data);
-//                 break;
-//             }
-
-//             if(count < n_cluster - 1)
-//                 //scrivo nella data area
-//                 memcpy(dest,
-//                     text + (count * boot_record->byte_per_sector * boot_record->sector_per_cluster),
-//                     boot_record->byte_per_sector * boot_record->sector_per_cluster);
-
-//             write_on_fat(curr_cluster, &i);
-//             count++;
-//             curr_cluster = i;
-
-//         }
-//     }
-
-//     //aggiorno data di modifica e dimensione file
-//     tmp_dir->dimension += strlen(text) + 1;
-//     memcpy(file_handle->entry_ptr, tmp_dir, sizeof(*tmp_dir));
-
-//     printf("modifica effettuata\n");
-//     //dealloco tutto
-//     free(text);
-//     free(tmp_dir);
-//     free(file_handle);
-
-// }
-
-void *format(char *name)
-{
+void format(char *name){
 
     time_t creation_time = time(NULL);
     // printf("sizeof bootrecord %ld\n", sizeof(*boot_record));
@@ -150,8 +35,7 @@ void *format(char *name)
 }
 
 // legge il contenuto del disco, legge il file e lo mappa in memoria
-void readDisk(char *f_name)
-{
+void readDisk(char *f_name){
 
     int fd_in = open(f_name, O_RDWR);
     if (fd_in < 0)
@@ -175,21 +59,18 @@ void readDisk(char *f_name)
 
 // n indica il numero i-esimo del settore, ove il
 // primo settore s'intende uguale a 0
-void *readSector(int n)
-{
+void *readSector(int n){
     return (disk + (BYTE_PER_SECTOR * n));
 }
 
-u_int16_t first_sector_of_cluster(u_int16_t n_cluster)
-{
+u_int16_t first_sector_of_cluster(u_int16_t n_cluster){
 
     return 1 + fatSectorNumber() +
            boot_record->n_directory_entries +
            (boot_record->sector_per_cluster * n_cluster);
 }
 
-void readDirEntry(DirectoryEntry *dir_entry, void *sector)
-{
+void readDirEntry(DirectoryEntry *dir_entry, void *sector){
     dir_entry->creation_date = *(time_t *)(sector + 0);
     dir_entry->update_date = *(time_t *)(sector + 8);
     dir_entry->first_cluster = *(u_int16_t *)(sector + 16);
@@ -198,8 +79,7 @@ void readDirEntry(DirectoryEntry *dir_entry, void *sector)
     // printf("%s\n", dir_entry->name);
 }
 
-void readBootRecord()
-{
+void readBootRecord(){
     char *s = readSector(0);
     boot_record->byte_per_sector = *(s + 0);
     boot_record->sector_per_cluster = *(u_int16_t *)(s + 2);
@@ -212,8 +92,7 @@ void readBootRecord()
 }
 
 // inizializzo la working dir a root
-void init_root()
-{
+void init_root(){
     DirectoryEntry *root = (DirectoryEntry *)malloc(sizeof(DirectoryEntry));
     strcpy(root->name, "root");
     root->creation_date = boot_record->date;
@@ -223,8 +102,7 @@ void init_root()
 
     path = list_init(root);
 }
-void cluster_info(int *free_cluster, int *n_files)
-{
+void cluster_info(int *free_cluster, int *n_files){
     char *s = readSector(1);
     int data = 0;
     for (int i = 0; i < (boot_record->n_cluster); i++)
@@ -241,15 +119,13 @@ void cluster_info(int *free_cluster, int *n_files)
     (*n_files) -= 2;
 }
 
-size_t disk_length()
-{
+size_t disk_length(){
     return (1 + fatSectorNumber() + dirTableSectorNumber() +
             dataAreaSectorNumber()) *
            BYTE_PER_SECTOR;
 }
 
-void info()
-{
+void info(){
 
     printf("n. byte per sector: %d\n", (boot_record->byte_per_sector));
     printf("n. sector per cluster: %d\n", (boot_record->sector_per_cluster));
@@ -267,38 +143,21 @@ void info()
     free(date);
 }
 
-int fatSectorNumber()
-{
+int fatSectorNumber(){
     return ceil((NUMBER_OF_CLUSTER * 2 / (double)BYTE_PER_SECTOR));
 }
 
-int dirTableSectorNumber()
-{
+int dirTableSectorNumber(){
     return NUMBER_OF_DIRECTORY_ENTRIES;
 }
 
-long dataAreaSectorNumber()
-{
+long dataAreaSectorNumber(){
     return NUMBER_OF_CLUSTER * SECTOR_PER_CLUSTER;
 }
 
-// trovo primo cluster libero nella FAT
-//  int get_free_cluster(){
-//      for(int i = 0; i < fatSectorNumber(); i++){
-//          // char *sector = readSector(i + 1);
-//          for(int j = i * (boot_record->byte_per_sector / 2);
-//              j < (boot_record->byte_per_sector) / 2 * (i + 1); j++){
-//              if(*(u_int16_t*)((readSector(i + 1) + j * 2))== 0)
-//                  return j;
-//          }
-//      }
-//      //FAT piena nessun cluster libero
-//      return 0;
 
-// }
 
-u_int16_t get_free_cluster()
-{
+u_int16_t get_free_cluster(){
     void *sector = readSector(1);
     for (int i = 0; i < boot_record->n_cluster; i++)
     {
@@ -309,8 +168,7 @@ u_int16_t get_free_cluster()
     return 0;
 }
 
-int get_n_free_cluster()
-{
+int get_n_free_cluster(){
     void *sector = readSector(1);
     int count = 0;
     for (int i = 0; i < boot_record->n_cluster; i++){
@@ -321,8 +179,7 @@ int get_n_free_cluster()
 }
 
 
-void printDirectoryEntry(DirectoryEntry *d)
-{
+void printDirectoryEntry(DirectoryEntry *d){
     printf("name: %s\n", d->name);
     char *date = (char *)malloc(20 * sizeof(char));
     printf("creation date: %s\n", formatTime(date, (d->creation_date)));
@@ -395,8 +252,7 @@ DirectoryEntry *set_dir_entry(char *name, enum type type){
     return result;
 }
 
-void createDir(char *dirname)
-{
+void createDir(char *dirname){
     // controllo se validità dirname, se non NULL
     if (!dirname)
     {
@@ -421,8 +277,7 @@ void createDir(char *dirname)
     //free(dir_entry);
 }
 
-void save(char *name)
-{
+void save(char *name){
     FILE *fd_out = fopen(name, "wb");
 
     fwrite(boot_record, sizeof(char) * BYTE_PER_SECTOR, 1, fd_out);
@@ -489,23 +344,19 @@ void listDir(){
     free(tmp_dir);
 }
 
-void changeDir(char *dir_name)
-{
+void changeDir(char *dir_name){
 
-    if (!dir_name)
-    {
+    if (!dir_name){
         printf(COLOR_RED "fornire directory\n" COLOR_DEFAULT);
         return;
     }
 
-    if (strcmp(dir_name, "..") == 0)
-    {
+    if (strcmp(dir_name, "..") == 0){
         remove_last(path);
         return;
     }
 
-    if (strcmp(dir_name, ".") == 0)
-    {
+    if (strcmp(dir_name, ".") == 0){
         path = reset_path(path);
         // init_root();
         return;
@@ -515,13 +366,11 @@ void changeDir(char *dir_name)
 
     u_int16_t n_sector = sector_current_dir();
 
-    for (int i = 0; i < boot_record->n_directory_entries; i++)
-    {
+    for (int i = 0; i < boot_record->n_directory_entries; i++){
         readDirEntry(tmp_dir, readSector(n_sector + i));
 
         // controllo se nome corrisponde e che sia una direcotry e non un file
-        if (strcmp(tmp_dir->name, dir_name) == 0 && tmp_dir->update_date == 0)
-        {
+        if (strcmp(tmp_dir->name, dir_name) == 0 && tmp_dir->update_date == 0){
             // aggiorno la lista
             ListPath *new_item = (ListPath *)malloc(sizeof(ListPath));
             new_item->dir_entry = tmp_dir;
@@ -537,20 +386,17 @@ void changeDir(char *dir_name)
 
 // recupera il primo settore della directory table della
 // path corrente
-u_int16_t sector_current_dir()
-{
+u_int16_t sector_current_dir(){
     if (current_dir(path)->first_cluster == 0)
         return 1 + fatSectorNumber();
     else
         return first_sector_of_cluster(current_dir(path)->first_cluster);
 }
 
-int remaining_space()
-{
+int remaining_space(){
     char *sector = readSector(1);
     int free_cluster = 0;
-    for (int i = 0; i < (boot_record->n_cluster); i++)
-    {
+    for (int i = 0; i < (boot_record->n_cluster); i++){
         if (*(sector + i * 2) == 0)
             free_cluster++;
     }
@@ -561,8 +407,7 @@ int remaining_space()
 // nella directory di lavoro corrente se il file non esiste
 DirectoryEntry *set_file(char *file_name){
     // verifico se la lunghezza di file_name è minore o uguale di 11 caratteri
-    if (strlen(file_name) > 11)
-    {
+    if (strlen(file_name) > 11){
         printf(COLOR_RED "Nome file non consentito, massimo 11 caratteri\n" COLOR_DEFAULT);
         return NULL;
     }
@@ -732,17 +577,21 @@ void createFile(char *file_name, int dimension){
 
 //torno dir entry di un FILE!(DA MODIFICARE?)
 void* get_dir_entry(char* name){
-    DirectoryEntry* dir_entry = (DirectoryEntry*) malloc(sizeof(DirectoryEntry));
+    // DirectoryEntry* dir_entry = (DirectoryEntry*) malloc(sizeof(DirectoryEntry));
+    DirectoryEntry* dir_entry;
     u_int16_t n_sector = sector_current_dir();
     
     for (int i = 0; i < boot_record->n_directory_entries; i++){
-        readDirEntry(dir_entry, readSector(n_sector + i));
-        if(strcmp(dir_entry->name, name) == 0 && dir_entry->update_date != 0)
-            free(dir_entry);
+        
+        //readDirEntry(dir_entry, readSector(n_sector + i));
+        dir_entry = (DirectoryEntry*) readSector(n_sector + i);
+        if(strcmp(dir_entry->name, name) == 0 && dir_entry->update_date != 0){
+            // free(dir_entry);
             return readSector(n_sector + i);
+        }
             
     }
-    free(dir_entry);
+    // free(dir_entry);
     return NULL;
 }
 
@@ -758,8 +607,8 @@ char* read_file(char *file_name){
         return NULL;
     }
 
-    void* dir_entry_sector = get_dir_entry(file_name);
-    
+    DirectoryEntry* dir_entry = (DirectoryEntry*)get_dir_entry(file_name);
+    printf("***debug first cluster:%d\n", dir_entry->first_cluster);
     // trovo directoryentry con nome file_name
     // DirectoryEntry *tmp_dir = (DirectoryEntry *)malloc(sizeof(DirectoryEntry));
 
@@ -786,37 +635,59 @@ char* read_file(char *file_name){
     //     return NULL;
     // }
 
-    if(!dir_entry_sector){
+    if(!dir_entry){
         printf(COLOR_RED "file non trovato\n" COLOR_DEFAULT);
         return NULL;
     }
     // recupero i cluster dalla fat e in contemporanea recupero dati dalla data area
-    u_int16_t curr_cluster = *(u_int16_t *)(dir_entry_sector + 16);
+    u_int16_t curr_cluster = dir_entry->first_cluster;
     u_int16_t next_cluster = 0;
     void *sector_fat = readSector(1);
     void *sector_data_area;
     u_int16_t dim = boot_record->byte_per_sector * boot_record->sector_per_cluster;
-    char *res = (char *)malloc(sizeof(char) * dim);
     
-    //printf("***inizio file\n");
+    char *res_tmp = (char *)calloc(sizeof(char) * dim, 1);
+    //char *res = (char *)calloc(sizeof(char) * dim, 1);
+    u_int16_t n_cluster = ceil( dir_entry->dimension / 
+        (double)(boot_record->sector_per_cluster * boot_record->byte_per_sector));
+    char *res = (char *)calloc(sizeof(char) * dim * n_cluster, 1) ;
+    // u_int16_t count = 0;
+    // while (1)
+    // {
+    //     count++;
+    //     sector_data_area = readSector(1 + fatSectorNumber() + dirTableSectorNumber() +
+    //         curr_cluster * boot_record->sector_per_cluster);
+    //     printf("***count:%d\n", count);
+
+    //     next_cluster = *((u_int16_t *)(sector_fat + curr_cluster * 2));
+    //     if (next_cluster == 1){
+    //         // strncpy(res, "\n", dim);
+    //         //printf("\n***fine file\n");
+    //         break;
+    //     } 
+    //     curr_cluster = next_cluster;
+    // }
+
+    // char *res = (char *)calloc(sizeof(char) * dim * count, 1) ;
+
+    // curr_cluster = dir_entry->first_cluster;
+ 
     while (1)
     {
         sector_data_area = readSector(1 + fatSectorNumber() + dirTableSectorNumber() +
-                                      curr_cluster * boot_record->sector_per_cluster);
-
-        strncpy(res, (char *)sector_data_area, dim);
-
-        //printf("%s", res);
+            curr_cluster * boot_record->sector_per_cluster);
+        strncpy(res_tmp, (char *)sector_data_area, dim);
+        strcat(res, res_tmp);
 
         next_cluster = *((u_int16_t *)(sector_fat + curr_cluster * 2));
         if (next_cluster == 1){
-            // strncpy(res, "\n", dim);
-            //printf("\n***fine file\n");
             break;
-        }
+        } 
         curr_cluster = next_cluster;
     }
-
+    free(res_tmp);
+    strcat(res, " ");
+    
     return res;
 }
 
@@ -1124,77 +995,104 @@ void erase_dir(char *dir_name)
     free(tmp_dir);
 }
 
-void *seek(FileHandle *file_handle, int offset)
-{
-}
+void help(char* command){
+    if(!command){
+        printf("Comandi disponibili:\n"
+                "comando \t\talias \t\tdescrizione\n"
+                "==================================================================================================\n"
+                "info  \t\t\t\t\telenca a video informazioni sul volume di lavoro\n"
 
-/**********************LISTA************************/
-ListPath *list_init(DirectoryEntry *dir_entry)
-{
-    ListPath *list = (ListPath *)malloc(sizeof(ListPath));
-    list->dir_entry = dir_entry;
-    list->next = NULL;
-    return list;
-}
+                "\ncreateDir[dirname] \tmd[dirname] \tcrea una sub-directory, della directory di"
+                "\nlavoro, \n\t\t\t\t\ttutilizzando il nome passato nel parametro dirname\n"
 
-void list_insert(ListPath *list, ListPath *new_item)
-{
-    if (list->next == NULL)
-    {
-        list->next = new_item;
-        new_item->next = NULL;
-        return;
+                "\nchangeDir[dirname] \tcd[dirname] \tcambia la directory di lavoro come indicato "
+                "dal parametro dirname\n"
+
+                "\nlistDir \t\tld \t\telenca il contenuto della directory di lavoro\n"
+
+                "\ncreateFile[filename] \tcf[filename] \tcrea un file di testo vuoto con il nome\n "
+                "\t\t\t\t\tfornito dal parametro filename\n"
+
+                "\nread[filename] \t\t\t\tlegge il contenuto del file passato come parametro e lo visualizza a schermo\n"
+
+                "\nwrite[filename][content] \t\tscrive nel file di testo, indicato dal parametro filename,\n"
+                "\t\t\t\t\t il contenuto del parametro content\n"
+
+                "\neraseFile[filename] \trm[filename] \telimina il file indicato dal parametro filename\n"
+
+                "\neraseDir[filename] \trmdir[dirname] \telimina la directory, indicata dal parametro dirname, se vuota\n"
+
+                "\nseek\n"
+
+                "\nexit \t\t\t\t\tchiude il programma e salva il filesystem di lavoro sul file con il nome del disco\n"
+
+        
+              );
     }
-    list_insert(list->next, new_item);
-}
+    else{
+        if(strcmp(command, "info") == 0){
+            printf("info  \ttelenca a video informazioni sul volume di lavoro\n");
+        }
+        
+        else if(strcmp(command, "createDir") == 0 || strcmp(command, "md") == 0){
+           printf("createDir[dirname] \tmd[dirname] \tcrea una sub-directory, della directory di"
+                "lavoro, utilizzando il nome passato nel parametro dirname\n"
+);
+            
+        }
+    
+        else if(strcmp(command, "changeDir") == 0|| strcmp(command, "cd") == 0){
+            printf("changeDir[dirname] \tcd[dirname] \tcambia la directory di lavoro come indicato "
+                "dal parametro dirname\n"
+);
+        }
 
-DirectoryEntry *current_dir(ListPath *list)
-{
-    if (list->next == NULL)
-        return list->dir_entry;
-    current_dir(list->next);
-}
+        else if(strcmp(command, "listDir") == 0 || strcmp(command, "ld") == 0){
+            printf("listDir  ld \telenca il contenuto della directory di lavoro\n"
+);
+        }
 
-void print_path(ListPath *list)
-{
-    if (list == NULL)
-        return;
-    printf(COLOR_BOLD_BLUE "/" COLOR_OFF);
-    printf(COLOR_BOLD_BLUE "%s" COLOR_OFF, list->dir_entry->name);
-    print_path(list->next);
-}
+        else if(strcmp(command, "createFile") == 0 || strcmp(command, "cf") == 0){
+            printf("createFile[filename] \tcf[filename] \tcrea un file di testo vuoto con il nome"
+                "fornito dal parametro filename\n"
+);
+        }
 
-void remove_last(ListPath *list)
-{
-    if (list->next == NULL)
-        return;
+        else if(strcmp(command, "read") == 0 ){
+            printf("read[filename] \tlegge il contenuto del file passato come parametro e lo visualizza a schermo\n"
+);
+        }
 
-    if (list->next->next == NULL)
-    {
-        free(list->next);
-        list->next = NULL;
-        return;
+        else if(strcmp(command, "write") == 0 ){
+            printf("write[filename][content] \tscrive nel file di testo, indicato dal parametro filename, "
+                "il contenuto del parametro content\n"
+);
+        }
+
+        else if(strcmp(command, "eraseFile") == 0 || strcmp(command, "rm") == 0){
+           printf("eraseFile[filename] \trm[filename] \telimina il file indicato dal parametro filename\n"
+);
+        }
+
+        else if(strcmp(command, "eraseDir") == 0 || strcmp(command, "rmdir") == 0){
+            printf("eraseDir[filename] \trmdir[dirname] \telimina la directory, indicata dal parametro dirname, se vuota\n"
+);
+        }
+
+        else if (strcmp(command, "exit") == 0){
+            printf("exit \tchiude il programma e salva il filesystem di lavoro sul file con il nome del disco\n"
+);
+        }
+
+        else if (strcmp(command, "seek") == 0){
+            printf("seek\n");
+        }
+            
+        
+        else{
+            printf("comando sconosciuto, help per maggiori informazioni\n");
+        }
     }
-    remove_last(list->next);
+
 }
 
-int lenght(ListPath *list)
-{
-    if (list == NULL)
-        return 0;
-    return 1 + lenght(list->next);
-}
-
-ListPath *reset_path(ListPath *list)
-{
-    ListPath *next = list->next;
-    ListPath *curr = list->next;
-    while (next != NULL)
-    {
-        next = curr->next;
-        free(curr);
-        curr = next;
-    }
-    list->next = NULL;
-    return list;
-}
