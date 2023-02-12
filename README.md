@@ -28,7 +28,7 @@ The opening of a file should return a `FileHandle` that stores the position in a
 Per implementare una versione simile al file system **FAT**, senza l'onere di operare con gli strumenti tipici dei bassi livelli del calcolatore elettronico, si mappa lo spazio fisico su uno spazio di memoria virtuale recuperando i dati dalla memoria in modo grezzo _raw_.
 
 ## Modello Pseudo FAT
-Nel nostro modello si utilizza un sottoinsieme delle funzionalità e dei dati del classico **FAT**: quelli strettamente necessari per una corretta implementazione del file system. Inoltre si adottanno delle semplificazioni, ad esempio, nel modello reale non si può prescidere da una grandezza costante quella del `disk sector` pari a `512 bytes` (per i classici _hard-disk_), nel nostro sistema, poiché poco interessati allo _storage_ vero e proprio, si fissa tale grandezza a `32 byte`. Inoltre si gestiscono solamente file di testo e i nomi dei files e delle directory ed avranno una lunghezza massima di 12 caratteri (8 + 3 caratteri di estensione, senza contare il punto, infatti viene sottoinsteso, quindi non scritto in memoria). I files non potranno avere una dimensione maggiore di 65535 byte.
+Nel nostro modello si utilizza un sottoinsieme delle funzionalità e dei dati del classico **FAT**: quelli strettamente necessari per una corretta implementazione del file system. Inoltre si adottanno delle semplificazioni, ad esempio, nel modello reale non si può prescidere da una grandezza costante quella del `disk sector` pari a `512 bytes` (per i classici _hard-disk_), nel nostro sistema si fissa tale grandezza a `32 byte`. Inoltre si gestiscono solamente file di testo e i nomi dei files e delle directory ed avranno una lunghezza massima di 12 caratteri. I files non potranno avere una dimensione maggiore di 65535 byte.
 
 ## Rappresentazione dello spazio
 Lo spazio virtuale, mappato in memoria, che modella il "disco fisico" viene suddiviso come segue
@@ -43,9 +43,9 @@ Occupa il primo settore del volume e conserva informazioni generali, come di seg
 |0|2|Numero di byte per settore|
 |2|2|Numero di settori per cluster|
 |4|2|Numero di cluster|
-|6|2|Numero di `entries` per le `Directory Table` inclusa la `Root Directory`|
+|6|2|Numero di `entries` per le `Directory Table` inclusa la `Root Directory`. In particolare il numero di entry deve essere minore o uguale al numero di settori per cluster|
 |8|8|Data di creazione del volume (in millisecondi)|
-|16|12|Nome del volume, incluso il carattere di terminazione ed escluso il punto che viene sottointeso |
+|16|12|Nome del volume, incluso il carattere di terminazione|
 |28|4|Spazio inutilizzato|
 
 ### FAT
@@ -122,18 +122,18 @@ il parametro `diskname` (max 12 caratteri) indica il nome del disco sul quale la
 
 |comando|sintassi |descrizione|
 |:-------|:--------|:----------|
-|`changeDir`|`changeDir/cd [dirname]`|cambia la `directory` di lavoro come indicato dal parametro `dirname`|
+|`changeDir`|`changeDir/cd [dirname]`|cambia la `directory` di lavoro come indicato dal parametro `dirname`. In particolare per spostarsi nella cartella precedente bisogna digitare `cd ..`, se invece ci si vuole spostare nella cartella principale, la root bisogna digitare `cd .`|
 |`createDir`|`createDir/md [dirname]`|crea una sub-directory, della `directory` di lavoro, utilizzando il nome passato nel parametro `dirname`|
 |`createFile`|`createFile/cf [filename]`|crea un file di testo vuoto con il nome fornito dal parametro `filename`|
 |`eraseDir`|`eraseDir/rd [dirname]`|elimina la directory, indicata dal parametro `dirname`, e ricorsivamente tutto il suo contenuto (`sub-directory` incluse)|
 |`eraseFile`|`eraseFile/rf [filename]`|elimina il file indicato dal parametro `filename`|
-|`exit`|`exit`|chiude il programma e salva il filesystem di lavoro sul file con il nome del disco|
-|`format`|`format`|formatta il disco di lavoro|
+|`exit`|`exit/e`|chiude il programma e salva il filesystem di lavoro sul file con il nome del disco|
+|`format`|`format/f`|formatta il disco di lavoro|
 |`info`|`info/i`|elenca a video informazioni sul volume di lavoro|
 |`read`|`read/r [filename]`|legge il contenuto del file passato come parametro e lo visualizza a schermo|
 |`help`|`help/h [command]`|fornisce una descrizione del comando passato come parametro, se non fornito elenca i comandi disponibili|
 |`listDir`|`listDir/ld]`|elenca il contenuto della directory di lavoro|
-|`seek`|?|?|
+|`seek`|`seek/s[filename][offset]`|sposta la posizione del puntatore del file indicato da `filename` su un `offset` specificato|
 |`write`|`write/w [filename] [content]`|scrive nel file di testo, indicato dal parametro `filename`, il contenuto del parametro. `content`. Se il file non esiste lo crea|
 
 

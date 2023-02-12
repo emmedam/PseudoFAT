@@ -7,6 +7,14 @@ ListPath* list_init(DirectoryEntry *dir_entry) {
   return list;
 }
 
+void list_free(ListPath* list){
+    if (list->next != NULL){
+        list_free(list->next);
+    }
+    free(list->dir_entry);
+    free(list);
+}
+
 void list_insert(ListPath* list, ListPath* new_item) {
     if (list->next == NULL){
         list->next = new_item;
@@ -25,8 +33,8 @@ DirectoryEntry* current_dir(ListPath* list){
 void print_path(ListPath* list){
     if(list == NULL)
         return;
-    printf(COLOR_BOLD_BLUE "/" COLOR_OFF);
-    printf(COLOR_BOLD_BLUE "%s" COLOR_OFF, list->dir_entry->name);
+    printf(COLOR_BOLD_BLUE "/" COLOR_DEFAULT);
+    printf(COLOR_BOLD_BLUE "%s" COLOR_DEFAULT, list->dir_entry->name);
     print_path(list->next);
 }
 
@@ -35,6 +43,7 @@ void remove_last(ListPath *list){
         return;
     
     if(list->next->next == NULL){
+        free(list->next->dir_entry);
         free(list->next);
         list->next = NULL;
         return;
@@ -53,6 +62,7 @@ ListPath* reset_path(ListPath *list){
     ListPath* curr = list -> next;
     while(next != NULL){
         next = curr -> next;
+        free(curr->dir_entry);
         free(curr);
         curr = next;
     }

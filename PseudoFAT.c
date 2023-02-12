@@ -1,10 +1,8 @@
 #include "fat.c"
 
-
-
 int main(int argc, char** argv){
     init();
-    char input[50];
+    char input[500];
     
     if(argc == 1){
         printf("PseudoFAT\n" 
@@ -28,15 +26,18 @@ int main(int argc, char** argv){
     //mappo il disco in memoria
     readDisk(f_name);
     readBootRecord();
+    
     char* token;
     char* read_text;
+    
     while(1){
         print_path(path);
-        printf(COLOR_BOLD_BLUE "> " COLOR_OFF);
+        printf(COLOR_BOLD_BLUE "> " COLOR_DEFAULT);
         scanf(" %[^\n]%*c", input);
         token = strtok(input, " ");
+        
 
-        if(strcmp(input, "info") == 0){
+        if(strcmp(input, "info") == 0 || strcmp(input, "i") == 0){
             info();
         }
         
@@ -71,7 +72,7 @@ int main(int argc, char** argv){
                 createFile(tmp_token, atoi(token));
         }
 
-        else if(strcmp(token, "read") == 0 ){
+        else if(strcmp(token, "read") == 0 || strcmp(token, "r") == 0 ){
             token = strtok(NULL, " ");
             read_text = read_file(token);
             if (read_text){
@@ -80,47 +81,62 @@ int main(int argc, char** argv){
             }
         }
 
-        else if(strcmp(token, "write") == 0 ){
-    
-            DirectoryEntry* dir_entry = get_dir_entry(strtok(NULL, " "));
-            if(!dir_entry){
-                printf("file inesistente\n");
+        else if(strcmp(token, "write") == 0 || strcmp(token, "w") == 0 ){
+            //printf("***debug: write called\n");
+            char* name = strtok(NULL, " ");
+            if(!name){
+                printf( "inserire nome\n" );
             }
             else{
-                token = strtok(NULL, "");
-                FileHandle* fe = get_file_handle(dir_entry);
-                read_text = read_file(fe->entry->name);
-                write_file(strcat(read_text, token), fe);
-                free(fe);
-                free(read_text);
+                DirectoryEntry* dir_entry = get_dir_entry(name);
+                if(!dir_entry){
+                    printf(COLOR_RED "file inesistente\n" COLOR_DEFAULT);
+                }
+                else{
+                    token = strtok(NULL, "");
+                    if(!token){
+                        printf(COLOR_RED "inserire contenuto da scrivere\n" COLOR_DEFAULT);
+                    }
+                    else{
+                        FileHandle* fe = get_file_handle(dir_entry);
+                        read_text = read_file(fe->entry->name);
+                        if (strlen(read_text) == 0){
+                            write_file(token, fe);
+                        }else{
+                            read_text = realloc(
+                                read_text, strlen(read_text) + strlen(token) + 2);
+                            write_file(strcat(read_text, token), fe);
+                        }
+                        free(fe);
+                        free(read_text);
+                    }
+                }
             }
         }
 
-        else if(strcmp(token, "eraseFile") == 0 || strcmp(token, "rm") == 0){
+        else if(strcmp(token, "eraseFile") == 0 || strcmp(token, "rf") == 0){
             token = strtok(NULL, " ");
             erase_file(token);
         }
 
-        else if(strcmp(token, "eraseDir") == 0 || strcmp(token, "rmdir") == 0){
+        else if(strcmp(token, "eraseDir") == 0 || strcmp(token, "rd") == 0){
             token = strtok(NULL, " ");
             erase_dir(token);
         }
 
-        else if(strcmp(token, "format") == 0){
-            char *answer = (char *)malloc(sizeof(char));
-            // TODO chiedere conferma prima di format
+        else if(strcmp(token, "format") == 0 || strcmp(token, "f") == 0){
+            char answer[50];
             printf("Sei sicuro di voler formattare il disco? tutti i tuoi dati andranno persi[si/no]\n");
             scanf("%[^\n]%*c", answer);
-            if(strcmp(answer, "si") == 0){
+            if(strcmp(answer, "Si") == 0 ||
+             strcmp(answer, "si") == 0 || 
+             strcmp(answer, "s") == 0 ||
+             strcmp(answer, "S") == 0){
                 format(boot_record->name);
             }
-            else if(strcmp(answer, "no") != 0 || strcmp(answer, "si") != 0 ){
-                printf("comando non valido\n");
-            }
-            free(answer);
         }
 
-        else if (strcmp(input, "exit") == 0)
+        else if (strcmp(input, "exit") == 0 || strcmp(input, "e") == 0)
             break;
         
         else{
@@ -130,14 +146,13 @@ int main(int argc, char** argv){
 
     }
 
+
     if(munmap(disk, disk_length()) == -1){
         perror("Rimozione mappatura fallita: "); 
         exit(EXIT_FAILURE);
-        
     }
-
+    
+    free(boot_record);
+    list_free(path);
     return 0;
-
 }
-
-

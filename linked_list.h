@@ -23,3 +23,5 @@ void remove_last(ListPath *);
 int lenght(ListPath *);
 
 ListPath* reset_path(ListPath*);
+
+void list_free(ListPath* );

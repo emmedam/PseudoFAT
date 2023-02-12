@@ -25,7 +25,7 @@ libpseudofat.a:	$(OBJS)
 				$(RM) $(OBJS)
 
 PseudoFAT: PseudoFAT.o $(LIBS)
-			$(CC) $(CCOPTS) -o $@ $^ -lm 
+			$(CC) $(CCOPTS) -o $@ $^ -lm
 
 
 

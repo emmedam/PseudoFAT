@@ -13,20 +13,17 @@
 #include "linked_list.h"
 
 
-#define COLOR_RED       "\x1b[31m"
-#define COLOR_DEFAULT   "\x1b[0m"
+#define COLOR_RED       "\e[0;31m"
+#define COLOR_DEFAULT   "\e[0m"
 #define COLOR_GREEN     "\e[0;32m"
-#define COLOR_BOLD      "\e[1m"
-#define COLOR_OFF       "\e[m"
 #define COLOR_BLUE      "\x1b[34m"
-#define COLOR_BOLD_BLUE "\e[1;5;34m"
+#define COLOR_BOLD_BLUE "\e[1;34m"
 
 
 #define BYTE_PER_SECTOR             32 //rimane fisso
-#define SECTOR_PER_CLUSTER          100
+#define SECTOR_PER_CLUSTER          3
 #define NUMBER_OF_CLUSTER           600
-#define NUMBER_OF_DIRECTORY_ENTRIES 50
-#define VOLUME_NAME                 "AFRODITE.fat"
+#define NUMBER_OF_DIRECTORY_ENTRIES 3
 
 enum type {FILE_FAT = 0, DIRECTORY_FAT = 1};
 
@@ -57,12 +54,16 @@ typedef struct FileHandle{
 
 typedef struct ListPath ListPath;
 
+extern BootRecord *boot_record;
+
 //riferimento al volume di lavoro mappato in memoria
 extern void *disk;
 
-//lista concatenata che rappresenta la working_dir
+
+//lista concatenata che rappresenta il percorso
+// della directory di lavoro o working dir
 extern ListPath* path;
-extern BootRecord *boot_record;
+
 
 /*********************************************/
 
