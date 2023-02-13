@@ -423,19 +423,18 @@ DirectoryEntry *set_file(char *file_name){
 }
 
 
-void createFile(char *file_name, int dimension){
+FileHandle* createFile(char *file_name, int dimension){
     // verifico se la lunghezza di file_name è minore o uguale di 11 caratteri
     if (strlen(file_name) > 11){
         printf(COLOR_RED "Nome file non consentito, massimo 11 caratteri\n" COLOR_DEFAULT);
-        return;
+        return NULL;
     }
 
     char *data_file;
     if (dimension != 0){
         // alloco una porzione di memoria di pari alla dimensione, che verrà scritta nel file
         data_file = (char *)malloc(dimension * sizeof(char));
-        for (int i = 0; i < dimension - 1; i++)
-        {
+        for (int i = 0; i < dimension - 1; i++){
             *(data_file + i) = "Fatti non fummo a viver come bruti, ma a seguir virtude e canoscenza."[i % 69];
         }
         *(data_file + dimension - 1) = '\0';
@@ -443,13 +442,16 @@ void createFile(char *file_name, int dimension){
     }
 
     DirectoryEntry *de = set_dir_entry(file_name, FILE_FAT);
+
     if (de && dimension > 0){
         FileHandle *fe = get_file_handle(de);
         write_file(data_file, fe);
         if (data_file)
             free(data_file);
-        free(fe);
+        return fe;
     }
+    return NULL;
+   
 }
 
 //torno dir entry di un FILE!(DA MODIFICARE?)
@@ -499,7 +501,8 @@ char* read_file(char *file_name){
     if(curr_cluster == 0){
         return  (char *)calloc(sizeof(char), 1);
     }
-    
+
+
     u_int16_t cluster_dim = boot_record->byte_per_sector * boot_record->sector_per_cluster;
     // u_int16_t n_cluster = ceil( dir_entry->dimension / 
     //    (double)(boot_record->sector_per_cluster * boot_record->byte_per_sector));
@@ -509,17 +512,18 @@ char* read_file(char *file_name){
     void *sector_fat = readSector(1);
     void *sector_data_area;
     char *res_tmp = (char *)calloc(sizeof(char) * (cluster_dim + 1), 1);
-
+    
     while (1)
     {
         sector_data_area = readSector(1 + fatSectorNumber() + dirTableSectorNumber() +
             curr_cluster * boot_record->sector_per_cluster);
         strncpy(res_tmp, (char *)sector_data_area, cluster_dim);
 
-        // printf("*** leggo\n%s\n***\n", res_tmp);
+        
         strcat(res, res_tmp);
 
         next_cluster = *((u_int16_t *)(sector_fat + curr_cluster * 2));
+        
         if (next_cluster == 1){
             break;
         } 
@@ -634,22 +638,32 @@ void clear_fat(u_int16_t first_cluster){
 
 
 FileHandle *get_file_handle(DirectoryEntry* entry){
-    FileHandle *file_handle = (FileHandle *)malloc(sizeof(FileHandle));
+    FileHandle *fe = (FileHandle *)malloc(sizeof(FileHandle));
 
-    file_handle -> entry = entry;
+    fe->entry = entry;
 
-    if (entry->first_cluster != 0){
-        int start = 1 + fatSectorNumber() + dirTableSectorNumber() + 
-            (entry -> first_cluster * boot_record->sector_per_cluster);
-        file_handle->start = readSector(start);
-        file_handle->end = readSector(start) + entry->dimension - 1;
-    }else{
-        file_handle->start = NULL;
-        file_handle->end = NULL;
-    }
-    file_handle->seek = file_handle->start;
-    return file_handle;
+
+    // if (entry->first_cluster != 0){
+    //     int start = 1 + fatSectorNumber() + dirTableSectorNumber() + 
+    //         (entry -> first_cluster * boot_record->sector_per_cluster);
+    //     fe->start = readSector(start);
+    //     fe->end = readSector(start) + entry->dimension - 1;
+    // }else{
+    //     fe->start = NULL;
+    //     fe->end = NULL;
+    // }
+    fe->seek = 0;
+    return fe;
 }
+
+
+int seek(FileHandle* fe, int offset){
+    if(offset < 0 || offset > fe->entry->dimension)
+        return 1;
+    fe->seek = offset;
+    return 0;
+}
+
 
 void erase_file(char *file_name){
     if (!file_name){
@@ -774,83 +788,74 @@ void erase_dir(char *dir_name){
     free(tmp_dir);
 }
 
+
+//prendo contenuto da read, calcolo dimensione finale della nuovo file considerando dimensione corrente fino al seek
+//piu quello da aggiunger, poi alloco stringa grossa quanto questa dim, quindi metterò prima parte della stringa del contneuto
+//e la restante parte quella da srivere con write 
+
 void help(char* command){
     if(!command){
-        printf("Comandi disponibili:\n"
-                
-                "info \t | \t | elenca a video informazioni sul volume di lavoro\n"
-
-                "createDir|md <dirname> crea una sub-directory, della directory di lavoro\n"
-
-                "changeDir|cd [dirname] \tcambia la directory di lavoro\n"
-
-                "listDir|ld \telenca il contenuto della directory di lavoro\n"
-
-                "createFile|cf [filename] \tcrea un file di testo vuoto\n"
-
-                "read [filename] \t\t\t\tlegge il contenuto del file\n"
-
-                "write [filename] [content] \t\tscrive nel file di testo\n"
-
-                "eraseFile|rf [filename] \telimina il file\n"
-
-                "eraseDir[filename] \trd[dirname] \telimina la directory, se vuota\n"
-
-                "seek\n"
-
-                "exit \t\t\t\t\tchiude il programma e salva il filesystem\n"
-
-        
-              );
+        printf("Comandi disponibili:\n");
+        printf("%-28s %s\n", "info|i", "elenca a video informazioni sul volume di lavoro");
+        printf("%-28s %s\n", "createDir|md <dirname>", "crea una sub-directory, della directory di lavoro");
+        printf("%-28s %s\n", "changeDir|cd <dirname> " ,"cambia la directory di lavoro" );
+        printf("%-28s %s\n","listDir|ld" ,"elenca il contenuto della directory di lavoro" );
+        printf("%-28s %s\n","createFile|cf <filename>" ,"crea un file di testo vuoto" );
+        printf("%-28s %s\n","read|r <filename> " ,"legge il contenuto del file" );
+        printf("%-28s %s\n","write|w <filename><content>" ,"scrive nel file di testo" );
+        printf("%-28s %s\n","eraseFile|rf <filename>" ,"elimina il file" );
+        printf("%-28s %s\n","eraseDir|rd <filename>" ,"elimina la directory, se vuota" );
+        printf("%-28s %s\n","seek|s <filename><offset>" ,"sposta la posizione del puntatore del file su un offset specificato" );
+        printf("%-28s %s\n","exit|e" ,"chiude il programma e salva il filesystem" );
     }
     else{
         if(strcmp(command, "info") == 0){
-            printf("info  \ttelenca a video informazioni sul volume di lavoro\n");
+            printf("info|i  telenca a video informazioni sul volume di lavoro\n");
         }
         
         else if(strcmp(command, "createDir") == 0 || strcmp(command, "md") == 0){
-           printf("createDir[dirname] \tmd[dirname] \tcrea una sub-directory, della directory di"
+           printf("createDir|md<dirname>  crea una sub-directory, della directory di"
                 "lavoro, utilizzando il nome passato nel parametro dirname\n");
             
         }
     
         else if(strcmp(command, "changeDir") == 0|| strcmp(command, "cd") == 0){
-            printf("changeDir[dirname] \tcd[dirname] \tcambia la directory di lavoro come indicato "
+            printf("changeDir|cd<dirname>  cambia la directory di lavoro come indicato "
                 "dal parametro dirname\n");
         }
 
         else if(strcmp(command, "listDir") == 0 || strcmp(command, "ld") == 0){
-            printf("listDir  ld \telenca il contenuto della directory di lavoro\n");
+            printf("listDir|ld  elenca il contenuto della directory di lavoro\n");
         }
 
         else if(strcmp(command, "createFile") == 0 || strcmp(command, "cf") == 0){
-            printf("createFile[filename] \tcf[filename] \tcrea un file di testo vuoto con il nome"
+            printf("createFile|cf<filename>  crea un file di testo vuoto con il nome"
                 "fornito dal parametro filename\n");
         }
 
         else if(strcmp(command, "read") == 0 ){
-            printf("read[filename] \tlegge il contenuto del file passato come parametro e lo visualizza a schermo\n");
+            printf("read|r<filename>  legge il contenuto del file passato come parametro e lo visualizza a schermo\n");
         }
 
         else if(strcmp(command, "write") == 0 ){
-            printf("write[filename][content] \tscrive nel file di testo, indicato dal parametro filename, "
+            printf("write|w<filename><content>  scrive nel file di testo, indicato dal parametro filename, "
                 "il contenuto del parametro content\n");
         }
 
         else if(strcmp(command, "eraseFile") == 0 || strcmp(command, "rm") == 0){
-           printf("eraseFile[filename] \trm[filename] \telimina il file indicato dal parametro filename\n");
+           printf("eraseFile|rf<filename>  elimina il file indicato dal parametro filename\n");
         }
 
         else if(strcmp(command, "eraseDir") == 0 || strcmp(command, "rmdir") == 0){
-            printf("eraseDir[filename] \trmdir[dirname] \telimina la directory, indicata dal parametro dirname, se vuota\n");
+            printf("eraseDir|rd<filename>  rmdir[dirname] \telimina la directory, indicata dal parametro dirname, se vuota\n");
         }
 
         else if (strcmp(command, "exit") == 0){
-            printf("exit \tchiude il programma e salva il filesystem di lavoro sul file con il nome del disco\n");
+            printf("exit|e  chiude il programma e salva il filesystem di lavoro sul file con il nome del disco\n");
         }
 
         else if (strcmp(command, "seek") == 0){
-            printf("seek\n");
+            printf("seek|s <filename><offset> sposta la posizione del puntatore del file indicato da filename su un offset specificato\n");
         }
             
         

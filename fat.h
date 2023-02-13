@@ -47,9 +47,9 @@ typedef struct DirectoryEntry{
 typedef struct FileHandle{
   //indica la posizione della dir_entry
   DirectoryEntry* entry;
-  void* start;
-  void* end;
-  void* seek;
+  // void* start;
+  // void* end;
+  int seek;
 }FileHandle;
 
 typedef struct ListPath ListPath;
@@ -133,7 +133,7 @@ u_int16_t first_sector_of_cluster(u_int16_t);
 
 void init_root();
 
-void createFile(char*, int);
+FileHandle* createFile(char*, int);
 
 DirectoryEntry* set_file(char*);
 
@@ -161,7 +161,7 @@ FileHandle* get_file_handle(DirectoryEntry*);
 
 void readDisk(char*);
 
-void* seek(FileHandle*, int);
+int seek(FileHandle*, int);
 
 u_int16_t sector_current_dir();
 

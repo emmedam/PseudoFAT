@@ -29,6 +29,8 @@ int main(int argc, char** argv){
     
     char* token;
     char* read_text;
+
+    FileHandle* global_handle = NULL;
     
     while(1){
         print_path(path);
@@ -66,10 +68,12 @@ int main(int argc, char** argv){
             token = strtok(NULL, " ");
             char* tmp_token = token;
             token = strtok(NULL, " ");
+            FileHandle* fe;
             if(!token)
-                createFile(tmp_token, 0);
+                fe = createFile(tmp_token, 0);
             else
-                createFile(tmp_token, atoi(token));
+                fe = createFile(tmp_token, atoi(token));
+            free(fe);
         }
 
         else if(strcmp(token, "read") == 0 || strcmp(token, "r") == 0 ){
@@ -82,7 +86,6 @@ int main(int argc, char** argv){
         }
 
         else if(strcmp(token, "write") == 0 || strcmp(token, "w") == 0 ){
-            //printf("***debug: write called\n");
             char* name = strtok(NULL, " ");
             if(!name){
                 printf( "inserire nome\n" );
@@ -99,19 +102,52 @@ int main(int argc, char** argv){
                     }
                     else{
                         FileHandle* fe = get_file_handle(dir_entry);
+                        
                         read_text = read_file(fe->entry->name);
                         if (strlen(read_text) == 0){
                             write_file(token, fe);
                         }else{
-                            read_text = realloc(
-                                read_text, strlen(read_text) + strlen(token) + 2);
-                            write_file(strcat(read_text, token), fe);
+                            if(global_handle != NULL && fe->entry == global_handle->entry){
+                                
+                                int dim = global_handle->seek + strlen(token) + 2;
+                                char* dest = calloc(sizeof(char), dim);
+                                
+                                strncpy(dest, read_text, global_handle->seek + 1);
+                                write_file(strcat(dest, token), fe);
+                                
+                                free(global_handle);
+                                global_handle = NULL;
+                                free(dest);
+                            }
+                            else{
+                                read_text = realloc(
+                                    read_text, strlen(read_text) + strlen(token) + 2);
+                                write_file(strcat(read_text, token), fe);
+                            }
+                            
                         }
+                    
                         free(fe);
                         free(read_text);
                     }
                 }
             }
+        }
+
+        else if(strcmp(token, "seek") == 0){
+            token = strtok(NULL, " ");
+            DirectoryEntry* dir_entry = get_dir_entry(token);
+            if(!dir_entry){
+                printf(COLOR_RED "file inesistente\n" COLOR_DEFAULT);
+            }
+            else{
+                global_handle = get_file_handle(dir_entry);
+                if(seek(global_handle, atoi(strtok(NULL, " "))) == 1){
+                    printf(COLOR_RED "offset non valido\n" COLOR_DEFAULT);
+                }
+            }
+            
+
         }
 
         else if(strcmp(token, "eraseFile") == 0 || strcmp(token, "rf") == 0){
@@ -152,6 +188,8 @@ int main(int argc, char** argv){
         exit(EXIT_FAILURE);
     }
     
+    // if(global_handle)
+    //     free(global_handle);
     free(boot_record);
     list_free(path);
     return 0;
