@@ -21,9 +21,9 @@
 
 
 #define BYTE_PER_SECTOR             32 //rimane fisso
-#define SECTOR_PER_CLUSTER          100
-#define NUMBER_OF_CLUSTER           600
-#define NUMBER_OF_DIRECTORY_ENTRIES 50
+#define SECTOR_PER_CLUSTER          8
+#define NUMBER_OF_CLUSTER           100
+#define NUMBER_OF_DIRECTORY_ENTRIES 8
 
 enum type {FILE_FAT = 0, DIRECTORY_FAT = 1};
 
@@ -47,8 +47,6 @@ typedef struct DirectoryEntry{
 typedef struct FileHandle{
   //indica la posizione della dir_entry
   DirectoryEntry* entry;
-  // void* start;
-  // void* end;
   u_int16_t seek;
 }FileHandle;
 
@@ -72,19 +70,19 @@ void init();
 void save(char*);
 
 //calcolo numero di settori necessari per allocare la Directory Table
-int dirTableSectorNumber();
+int dir_table_sector_number();
 
 //calcolo numero di settori necessari per allocare la FAT table
-int fatSectorNumber();
+int fat_sector_number();
 
 //calcolo numero di settori necessari per allocare la Data Area
-long dataAreaSectorNumber();
+long data_area_sector_number();
 
 //allocazione BootRecord
 BootRecord* initBootRecord(char*);
 
 //leggo contenuto del boot record sulla memoria
-void readBootRecord();
+void read_boot_record();
 
 //elenca a video informazioni sul volume di lavoro
 void info();
@@ -93,14 +91,14 @@ void info();
 void format(char*);
 
 //leggo un settore 
-void* readSector(int);
+void* read_sector(int);
 
 //quanti cluster liberi ci sono nella fat e numero di files
 void cluster_info(int *, int*);
 
 //crea una sub-directory, della directory di lavoro, 
 //utilizzando il nome passato nel parametro dirname
-void createDir(char*);
+void create_dir(char*);
 
 //lunghezza del disco
 size_t disk_length();
@@ -111,10 +109,10 @@ void write_on_disk(void*, int);
 
 //elenca il contenuto della directory passata come parametro, 
 //se non fornita elenca il contenuto della directory di lavoro
-void listDir();
+void list_dir();
 
 //cambia la directory di lavoro, modifico la working dir
-void changeDir(char*);
+void change_dir(char*);
 
 
 //ritorna il primo settore di un cluster
@@ -122,7 +120,7 @@ u_int16_t first_sector_of_cluster(u_int16_t);
 
 void init_root();
 
-FileHandle* createFile(char*, int);
+FileHandle* create_file(char*, int);
 
 void write_on_fat(int, u_int16_t*);
 
@@ -146,7 +144,7 @@ void erase_dir(char*);
 FileHandle* get_file_handle(DirectoryEntry*);
 
 
-void readDisk(char*);
+void read_disk(char*);
 
 int seek(FileHandle*, u_int16_t);
 

@@ -25,7 +25,7 @@ The opening of a file should return a `FileHandle` that stores the position in a
 
 ## Premessa
 
-Per implementare una versione simile al file system **FAT**, senza operare con gli strumenti tipici dei bassi livelli del calcolatore, si mappa lo spazio fisico su uno spazio di memoria virtuale recuperando i dati dalla memoria in modo grezzo _raw_.
+Per implementare una versione simile al file system **FAT**, senza operare con gli strumenti tipici dei bassi livelli del calcolatore, si mappa lo spazio fisico del disco su uno spazio di memoria, tuttavia recuperando i dati dalla memoria in modo grezzo _raw_ come avviene nel modello reale.
 
 ## Modello Pseudo FAT
 Nel seguente modello si utilizza un sottoinsieme delle funzionalità e dei dati del classico **FAT**: quelli strettamente necessari per una corretta implementazione del file system. Inoltre si adottanno delle semplificazioni, ad esempio, nel modello reale non si può prescidere da una grandezza costante quella del `disk sector` pari a `512 bytes` (per i classici _hard-disk_), nel nostro sistema si fissa tale grandezza a `32 byte`. Inoltre si gestiscono solamente file di testo e i nomi dei files e delle directory avranno una lunghezza massima di 12 caratteri. I files non potranno avere una dimensione maggiore di 65535 byte.
@@ -43,7 +43,7 @@ Occupa il primo settore del volume e conserva informazioni generali, come di seg
 |0|2|Numero di byte per settore|
 |2|2|Numero di settori per cluster|
 |4|2|Numero di cluster|
-|6|2|Numero di `entries` per le `Directory Table` inclusa la `Root Directory`. In particolare il numero di entry deve essere minore o uguale al numero di settori per cluster|
+|6|2|Numero di `entries` per le `Directory Table` inclusa la `Root Directory`. In particolare il numero di `entries` non può essere maggiore del numero di settori per cluster|
 |8|8|Data di creazione del volume (in millisecondi)|
 |16|12|Nome del volume, incluso il carattere di terminazione|
 |28|4|Spazio inutilizzato|
@@ -107,9 +107,9 @@ Parametri del boot record (32 byte)
 Spazio Boot record = ⌈32 byte / 32 byte⌉ (1 settore)
 Spazio FAT = ⌈600*2 / 32 ⌉ (38 settore)
 Spazio Root Directory = ⌈(32*50) byte / 32 byte⌉ (50 settori)
-Spazio Data area = 1920000 (60000 settori)
+Spazio Data area = 1.920.000 (60.000 settori)
 
-il volume totale allocato è dunque di 60089 settori pari a 1922848 byte
+il volume totale allocato è dunque di 60.089 settori pari a 1.922.848 byte
 
 ```
 ### Interfaccia utente
@@ -122,37 +122,19 @@ il parametro `diskname` (max 12 caratteri) indica il nome del disco sul quale la
 
 |comando|sintassi |descrizione|
 |:-------|:--------|:----------|
-|`changeDir`|`changeDir/cd [dirname]`|cambia la `directory` di lavoro come indicato dal parametro `dirname`. In particolare per spostarsi nella cartella precedente bisogna digitare `cd ..`, se invece ci si vuole spostare nella cartella principale, la root bisogna digitare `cd .`|
-|`createDir`|`createDir/md [dirname]`|crea una sub-directory, della `directory` di lavoro, utilizzando il nome passato nel parametro `dirname`|
-|`createFile`|`createFile/cf [filename]`|crea un file di testo vuoto con il nome fornito dal parametro `filename`|
-|`listDir`|`listDir/ld]`|elenca il contenuto della directory di lavoro|
-|`eraseDir`|`eraseDir/rd [dirname]`|elimina la directory, indicata dal parametro `dirname` solamente se vuota|
-|`eraseFile`|`eraseFile/rf [filename]`|elimina il file indicato dal parametro `filename`|
-|`exit`|`exit/e`|chiude il programma e salva il filesystem di lavoro sul file con il nome del disco|
-|`format`|`format/f`|formatta il disco di lavoro|
-|`info`|`info/i`|elenca a video informazioni sul volume di lavoro|
-|`read`|`read/r [filename]`|legge il contenuto del file passato come parametro e lo visualizza a schermo|
-|`write`|`write/w [filename] [content]`|scrive nel file di testo, indicato dal parametro `filename`, il contenuto del parametro. `content`. Se il file non esiste lo crea|
-|`seek`|`seek/s[filename][offset]`|sposta la posizione del puntatore del file indicato da `filename` su un `offset` specificato|
-|`help`|`help/h [command]`|fornisce una descrizione del comando passato come parametro, se non fornito elenca i comandi disponibili|
-
-
-
-
-
-### Activity
-
-#### Creazione di un file
-Parametri necessari: nome del file.
-Per la creazione di un file, nella directory di lavoro, si verifica preliminarmente la disponibilità di una entry libera nella Directory Table, quindi la lunghezza del nome e che non esista una entry con lo stesso nome.
-Fatte queste verifiche si inserisce una nuova entry.
-
-#### Scrittura di un file
-Parametri necessari: entry del file e il contenuto da scrivere.
-Per la scrittura di un file è necessario, come precondizione, che il file esista come entry nella Directory Table.
-Calcolata la dimensione del contenuto da scrivere si calcola quanti cluster siano necessari per la sua allocazione e si verifica che ce ne siano liberi nella FAT, quindi si scrive sui cluster facendo in modo che l'ultimo carattere sia seguito da un carattere di fine stringa NIL (nel nostro modello questo rappresenta la fine del file).
-Contestualmente alla scrittura del contenuto nei cluster disponibili si aggiornerà anche la FAT.
-Completata la scrittura si aggiorna la entry con la dimensione (nella quale bisogna si include il carattere di fine file) e la data di modifica.
+|`changeDir`|`changeDir\|cd [dirname]`|cambia la `directory` di lavoro come indicato dal parametro `dirname`. Per spostarsi nella cartella padre bisogna digitare `cd ..`, se invece ci si vuole spostare nella cartella principale, la root, bisogna digitare `cd .`|
+|`createDir`|`createDir\|md [dirname]`|crea una sub-directory, della `directory` di lavoro, utilizzando il nome passato nel parametro `dirname`|
+|`createFile`|`createFile\|cf [filename] [debug dimension]`|crea un file di testo vuoto, nella directory di lavoro, con il nome fornito dal parametro `filename`. Se viene fornita anche la dimensione (opzionale) si crea un file della dimensione richiesta scrivendo un contenuto pseudocasuale|
+|`listDir`|`listDir\|ld]`|elenca il contenuto della directory di lavoro|
+|`eraseDir`|`eraseDir\|rd [dirname]`|elimina la directory, se presente nella directory di lavoro, indicata dal parametro `dirname` solamente se vuota|
+|`eraseFile`|`eraseFile\|rf [filename]`|elimina il file, se presente nella directory di lavoro, indicato dal parametro `filename`|
+|`exit`|`exit\|e`|chiude il programma|
+|`format`|`format\|f`|formatta il disco di lavoro cancellando tutto il contenuto presente|
+|`info`|`info\|i`|elenca a video informazioni sul volume di lavoro|
+|`read`|`read\|r [filename]`|legge il contenuto testuale del file passato come parametro e lo visualizza a schermo|
+|`write`|`write\|w [filename] [content]`|scrive nel file di testo, indicato dal parametro `filename`, il contenuto del parametro. `content`. Se non viene indicata una particolare posizione nel file con il comando `seek` il contenuto viene accodato, altrimenti viene inserito a partire dalla posizione indicata|
+|`seek`|`seek\|s [filename] [offset]`|sposta la posizione del puntatore del file indicato da `filename` su un `offset` specificato|
+|`help`|`help\|h [command]`|fornisce una descrizione del comando passato come parametro, se non fornito elenca i comandi disponibili|
 
 ### Strutture dati utilizzate
 Le principali strutture dati utilizzate nel programma
@@ -163,17 +145,27 @@ Le principali strutture dati utilizzate nel programma
 
 Di seguito si mostra il dump della memoria che rappresenta un volume creato secondo i seguenti parametri:
 ```
-..parametri disco..e ecc
+- byte per settore: 32
+- n. settori per cluster: 8
+- n. cluster: 100
+- n. entries per le Directory Table: 8
+- nome del volume: AFRODITE.fat
+
+il volume totale allocato è dunque di 816 settori pari a 26.112 byte
 ```
 e la seguente struttuta
 
 ```
 /root
-|---dir1
-|---dir2
-|  |---file_1.txt
-|  |---file_2.txt
-   |dir3
+|--/dir1
+|--/dir2
+|  |--f1_dir2.txt (16 byte)
+|  |--f2_dir2.txt (32 byte)
+|  |--/dir3
+|  |  |--f1_dir3.txt (258 byte)
+|--f1_root.txt (0 byte)
+|..
+
 ```
 ![Strutture dati](doc/dump.png)
 

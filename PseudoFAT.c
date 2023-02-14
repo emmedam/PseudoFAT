@@ -13,6 +13,7 @@ int main(int argc, char** argv){
                "Progetto Sistemi Operativi 2021-22, Prof. Grisetti\n");    
         exit(0);
     }
+
     char *f_name = argv[1];
     
     //controllo se file è gia esistente
@@ -24,8 +25,8 @@ int main(int argc, char** argv){
     }
     
     //mappo il disco in memoria
-    readDisk(f_name);
-    readBootRecord();
+    read_disk(f_name);
+    read_boot_record();
     
     char* token;
     char* read_text;
@@ -38,7 +39,6 @@ int main(int argc, char** argv){
         scanf(" %[^\n]%*c", input);
         token = strtok(input, " ");
         
-
         if(strcmp(input, "info") == 0 || strcmp(input, "i") == 0){
             info();
         }
@@ -50,18 +50,17 @@ int main(int argc, char** argv){
         
         else if(strcmp(token, "createDir") == 0 || strcmp(token, "md") == 0){
             token = strtok(NULL, " ");
-            createDir(token);
+            create_dir(token);
             
         }
     
         else if(strcmp(token, "changeDir") == 0|| strcmp(token, "cd") == 0){
             token = strtok(NULL, " ");
-            changeDir(token);
+            change_dir(token);
         }
 
         else if(strcmp(input, "listDir") == 0 || strcmp(input, "ld") == 0){
-            //listDir(path->dir_entry);
-            listDir(current_dir(path));
+            list_dir(current_dir(path));
         }
 
         else if(strcmp(token, "createFile") == 0 || strcmp(token, "cf") == 0){
@@ -70,9 +69,9 @@ int main(int argc, char** argv){
             token = strtok(NULL, " ");
             FileHandle* fe;
             if(!token)
-                fe = createFile(tmp_token, 0);
+                fe = create_file(tmp_token, 0);
             else
-                fe = createFile(tmp_token, atoi(token));
+                fe = create_file(tmp_token, atoi(token));
             free(fe);
         }
 
@@ -184,12 +183,12 @@ int main(int argc, char** argv){
 
 
     if(munmap(disk, disk_length()) == -1){
-        perror("Rimozione mappatura fallita: "); 
+        perror("Rimozione mappatura fallita: ");
+        free(boot_record);
+        list_free(path);
         exit(EXIT_FAILURE);
     }
     
-    // if(global_handle)
-    //     free(global_handle);
     free(boot_record);
     list_free(path);
     return 0;
