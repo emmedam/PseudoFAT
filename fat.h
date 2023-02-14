@@ -21,9 +21,9 @@
 
 
 #define BYTE_PER_SECTOR             32 //rimane fisso
-#define SECTOR_PER_CLUSTER          3
+#define SECTOR_PER_CLUSTER          100
 #define NUMBER_OF_CLUSTER           600
-#define NUMBER_OF_DIRECTORY_ENTRIES 3
+#define NUMBER_OF_DIRECTORY_ENTRIES 50
 
 enum type {FILE_FAT = 0, DIRECTORY_FAT = 1};
 
@@ -71,9 +71,6 @@ void init();
 
 void save(char*);
 
-//alloca directoryTable
-// void* initDirTable();
-
 //calcolo numero di settori necessari per allocare la Directory Table
 int dirTableSectorNumber();
 
@@ -88,11 +85,6 @@ BootRecord* initBootRecord(char*);
 
 //leggo contenuto del boot record sulla memoria
 void readBootRecord();
-
-//stampo elementi contenuti nel bootRecord
-void print_bootRecord(BootRecord*);
-
-//****dovrei deallocare BootRecord... e tutti gli malloc(credo)****
 
 //elenca a video informazioni sul volume di lavoro
 void info();
@@ -116,9 +108,6 @@ size_t disk_length();
 //scrivo su disco 
 void write_on_disk(void*, int);
 
-void printFAT();
-
-int cmpInput(char*, char *);
 
 //elenca il contenuto della directory passata come parametro, 
 //se non fornita elenca il contenuto della directory di lavoro
@@ -134,8 +123,6 @@ u_int16_t first_sector_of_cluster(u_int16_t);
 void init_root();
 
 FileHandle* createFile(char*, int);
-
-DirectoryEntry* set_file(char*);
 
 void write_on_fat(int, u_int16_t*);
 

@@ -15,10 +15,7 @@ void init(){
 
 void format(char *name){
 
-    //boot_record = (BootRecord*)readSector(0);
-    //boot_record = (BootRecord *)calloc(sizeof(BootRecord), 1);
     time_t creation_time = time(NULL);
-    // printf("sizeof bootrecord %ld\n", sizeof(*boot_record));
     boot_record->byte_per_sector = (u_int16_t)BYTE_PER_SECTOR;
     boot_record->sector_per_cluster = (u_int16_t)SECTOR_PER_CLUSTER;
     boot_record->n_cluster = (u_int16_t)NUMBER_OF_CLUSTER;
@@ -102,12 +99,9 @@ void readDirEntry(DirectoryEntry *dir_entry, void *sector){
     dir_entry->first_cluster = *(u_int16_t *)(sector + 16);
     dir_entry->dimension = *(u_int16_t *)(sector + 18);
     strcpy(dir_entry->name, (char *)(sector + 20));
-    // printf("%s\n", dir_entry->name);
 }
 
 void readBootRecord(){
-
-    //boot_record = (BootRecord*)readSector(0);
 
     char *s = readSector(0);
     boot_record->byte_per_sector = *(s + 0);
@@ -166,7 +160,6 @@ void info(){
     int free_cluster = 0, n_files = 0;
     cluster_info(&free_cluster, &n_files);
     printf("numero di cluster liberi: %d\n", free_cluster);
-    // printf("numero di files e/o directory: %d\n", n_files);
     printf("dimensione: %ld Bytes\n", disk_length());
 
     free(date);
@@ -303,7 +296,6 @@ void createDir(char *dirname){
     u_int16_t last = 1;
     write_on_fat(dir_entry->first_cluster, &last);
 
-    //free(dir_entry);
 }
 
 
@@ -454,23 +446,18 @@ FileHandle* createFile(char *file_name, int dimension){
    
 }
 
-//torno dir entry di un FILE!(DA MODIFICARE?)
+//torno dir entry di un FILE
 void* get_dir_entry(char* name){
-    // DirectoryEntry* dir_entry = (DirectoryEntry*) malloc(sizeof(DirectoryEntry));
     DirectoryEntry* dir_entry;
     u_int16_t n_sector = sector_current_dir();
     
     for (int i = 0; i < boot_record->n_directory_entries; i++){
-        
-        //readDirEntry(dir_entry, readSector(n_sector + i));
         dir_entry = (DirectoryEntry*) readSector(n_sector + i);
         if(strcmp(dir_entry->name, name) == 0 && dir_entry->update_date != 0){
-            // free(dir_entry);
             return readSector(n_sector + i);
         }
             
     }
-    // free(dir_entry);
     return NULL;
 }
 
@@ -504,9 +491,6 @@ char* read_file(char *file_name){
 
 
     u_int16_t cluster_dim = boot_record->byte_per_sector * boot_record->sector_per_cluster;
-    // u_int16_t n_cluster = ceil( dir_entry->dimension / 
-    //    (double)(boot_record->sector_per_cluster * boot_record->byte_per_sector));
-    // char *res = (char *)calloc(sizeof(char) * cluster_dim * n_cluster, 1);
     char *res = (char *)calloc(sizeof(char) * (dir_entry->dimension + 1), 1);
     u_int16_t next_cluster = 0;
     void *sector_fat = readSector(1);
@@ -615,8 +599,6 @@ DirectoryEntry *write_file(char *file_content, FileHandle *file_handle){
     file_handle->entry->dimension = dimension;
     file_handle->entry->update_date = time(NULL);
 
-    // memcpy(file_handle->entry, file_handle->entry, sizeof(*dir_entry));
-
     return file_handle->entry;
 }
 
@@ -703,7 +685,6 @@ void erase_file(char *file_name){
                     break;
                 }
                 curr_cluster = next_cluster;
-                // sector_data_area = readSector(1 + fatSectorNumber() + dirTableSectorNumber() + curr_cluster );
             }
         }
         // uso calloc in modo da inizializzare a 0 tutti gli elementi della DirTable e allocare spazio per la fat table
@@ -736,7 +717,6 @@ void erase_dir(char *dir_name){
         }
     }
 
-    //printf("sector: %d\n", sector);
     if (i >= boot_record->n_directory_entries){
         printf(COLOR_RED "directory inesistente su directory corrente\n" COLOR_DEFAULT);
         free(dir_entry);
@@ -770,7 +750,6 @@ void erase_dir(char *dir_name){
             u_int16_t free_cluster = 0;
             write_on_fat(dir_entry->first_cluster, &free_cluster);
 
-            //printf("tmp_sector: %d\n", tmp_sector);
             void *dest;
             if (current_dir(path)->first_cluster == 0)
                 dest = readSector(tmp_sector);
@@ -788,10 +767,6 @@ void erase_dir(char *dir_name){
     free(tmp_dir);
 }
 
-
-//prendo contenuto da read, calcolo dimensione finale della nuovo file considerando dimensione corrente fino al seek
-//piu quello da aggiunger, poi alloco stringa grossa quanto questa dim, quindi metterò prima parte della stringa del contneuto
-//e la restante parte quella da srivere con write 
 
 void help(char* command){
     if(!command){

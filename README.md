@@ -25,7 +25,7 @@ The opening of a file should return a `FileHandle` that stores the position in a
 
 ## Premessa
 
-Per implementare una versione simile al file system **FAT**, senza di operare con gli strumenti tipici dei bassi livelli del calcolatore, si mappa lo spazio fisico su uno spazio di memoria virtuale recuperando i dati dalla memoria in modo grezzo _raw_.
+Per implementare una versione simile al file system **FAT**, senza operare con gli strumenti tipici dei bassi livelli del calcolatore, si mappa lo spazio fisico su uno spazio di memoria virtuale recuperando i dati dalla memoria in modo grezzo _raw_.
 
 ## Modello Pseudo FAT
 Nel seguente modello si utilizza un sottoinsieme delle funzionalità e dei dati del classico **FAT**: quelli strettamente necessari per una corretta implementazione del file system. Inoltre si adottanno delle semplificazioni, ad esempio, nel modello reale non si può prescidere da una grandezza costante quella del `disk sector` pari a `512 bytes` (per i classici _hard-disk_), nel nostro sistema si fissa tale grandezza a `32 byte`. Inoltre si gestiscono solamente file di testo e i nomi dei files e delle directory avranno una lunghezza massima di 12 caratteri. I files non potranno avere una dimensione maggiore di 65535 byte.
@@ -173,7 +173,7 @@ e la seguente struttuta
 |---dir2
 |  |---file_1.txt
 |  |---file_2.txt
-|---dir3
+   |dir3
 ```
 ![Strutture dati](doc/dump.png)
 
