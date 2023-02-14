@@ -519,10 +519,6 @@ char* read_file(char *file_name){
 // scrive il contenuto del file passato come parametero
 DirectoryEntry *write_file(char *file_content, FileHandle *file_handle){
 
-    // *****ATTENZIONE!!! non verifica se spazio eventualmente libero nell'ultimo
-    // eventuale cluster gia' assegnato sia sufficiente a contenere
-    // eventuale file_content che rappresenti un'accodamento
-    // *****DA SISTEMARE*****
     int dimension = strlen(file_content) + 1;
     // conto il numero di cluster necessari per memorizzare il file
     u_int16_t n_cluster = ceil(dimension / 

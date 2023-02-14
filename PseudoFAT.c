@@ -133,7 +133,7 @@ int main(int argc, char** argv){
             }
         }
 
-        else if(strcmp(token, "seek") == 0){
+        else if(strcmp(token, "seek") == 0 || strcmp(token, "s") == 0){
             token = strtok(NULL, " ");
             DirectoryEntry* dir_entry = get_dir_entry(token);
             if(!dir_entry){
