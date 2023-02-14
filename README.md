@@ -25,10 +25,10 @@ The opening of a file should return a `FileHandle` that stores the position in a
 
 ## Premessa
 
-Per implementare una versione simile al file system **FAT**, senza l'onere di operare con gli strumenti tipici dei bassi livelli del calcolatore elettronico, si mappa lo spazio fisico su uno spazio di memoria virtuale recuperando i dati dalla memoria in modo grezzo _raw_.
+Per implementare una versione simile al file system **FAT**, senza di operare con gli strumenti tipici dei bassi livelli del calcolatore, si mappa lo spazio fisico su uno spazio di memoria virtuale recuperando i dati dalla memoria in modo grezzo _raw_.
 
 ## Modello Pseudo FAT
-Nel nostro modello si utilizza un sottoinsieme delle funzionalità e dei dati del classico **FAT**: quelli strettamente necessari per una corretta implementazione del file system. Inoltre si adottanno delle semplificazioni, ad esempio, nel modello reale non si può prescidere da una grandezza costante quella del `disk sector` pari a `512 bytes` (per i classici _hard-disk_), nel nostro sistema si fissa tale grandezza a `32 byte`. Inoltre si gestiscono solamente file di testo e i nomi dei files e delle directory ed avranno una lunghezza massima di 12 caratteri. I files non potranno avere una dimensione maggiore di 65535 byte.
+Nel seguente modello si utilizza un sottoinsieme delle funzionalità e dei dati del classico **FAT**: quelli strettamente necessari per una corretta implementazione del file system. Inoltre si adottanno delle semplificazioni, ad esempio, nel modello reale non si può prescidere da una grandezza costante quella del `disk sector` pari a `512 bytes` (per i classici _hard-disk_), nel nostro sistema si fissa tale grandezza a `32 byte`. Inoltre si gestiscono solamente file di testo e i nomi dei files e delle directory avranno una lunghezza massima di 12 caratteri. I files non potranno avere una dimensione maggiore di 65535 byte.
 
 ## Rappresentazione dello spazio
 Lo spazio virtuale, mappato in memoria, che modella il "disco fisico" viene suddiviso come segue
@@ -63,7 +63,7 @@ La **FAT** occupa un certo numero di settori subito dopo il boot record, lo spaz
 |||1: ultimo cluster del file|
 |||2-65535: cluster successivo del file|
 
-Ovviamente i cluster logici inizieranno dall'indice 2 e secondo questa nostra implementazione non potranno essere più di 65534.
+Ovviamente i cluster logici inizieranno dall'indice 2 e secondo questa implementazione non potranno essere più di 65534.
 
 ### Root Directory
 Occupa un certo numero di settori, in funzione dell'impostazione del valore di numero di `entries` contenuto nel `Boot record`, ove viene memorizzata la `Directory Table`. Quest'ultima è una tabella che elenca i file e le subdirectory della root come verrà meglio specificato nel seguito. Si precisa che ogni directory del volume, inclusa la `root`, possiede una propria `Directory Table`.
@@ -75,7 +75,7 @@ Lo spazio occupato in memoria della `Directory Table`, espresso in settori, è d
 
 `Spazio Directory Table (settori) = ⌈n_directory_entries * lughezza_directory_entry / n_byte_per settore⌉`
 
-Nel nostro modello avendo assunto che il numero di byte per settore viene fissato a 32, osservando la struttura delle `directory_entry` che occupano esattamente 32 byte, si può semplificare il calcolo come segue:
+Nel seguente modello avendo assunto che il numero di byte per settore viene fissato a 32, osservando la struttura delle `directory_entry` che occupano esattamente 32 byte, si può semplificare il calcolo come segue:
 
 `Spazio Directory Table (settori) = n_directory_entries`
 
@@ -125,16 +125,19 @@ il parametro `diskname` (max 12 caratteri) indica il nome del disco sul quale la
 |`changeDir`|`changeDir/cd [dirname]`|cambia la `directory` di lavoro come indicato dal parametro `dirname`. In particolare per spostarsi nella cartella precedente bisogna digitare `cd ..`, se invece ci si vuole spostare nella cartella principale, la root bisogna digitare `cd .`|
 |`createDir`|`createDir/md [dirname]`|crea una sub-directory, della `directory` di lavoro, utilizzando il nome passato nel parametro `dirname`|
 |`createFile`|`createFile/cf [filename]`|crea un file di testo vuoto con il nome fornito dal parametro `filename`|
-|`eraseDir`|`eraseDir/rd [dirname]`|elimina la directory, indicata dal parametro `dirname`, e ricorsivamente tutto il suo contenuto (`sub-directory` incluse)|
+|`listDir`|`listDir/ld]`|elenca il contenuto della directory di lavoro|
+|`eraseDir`|`eraseDir/rd [dirname]`|elimina la directory, indicata dal parametro `dirname` solamente se vuota|
 |`eraseFile`|`eraseFile/rf [filename]`|elimina il file indicato dal parametro `filename`|
 |`exit`|`exit/e`|chiude il programma e salva il filesystem di lavoro sul file con il nome del disco|
 |`format`|`format/f`|formatta il disco di lavoro|
 |`info`|`info/i`|elenca a video informazioni sul volume di lavoro|
 |`read`|`read/r [filename]`|legge il contenuto del file passato come parametro e lo visualizza a schermo|
-|`help`|`help/h [command]`|fornisce una descrizione del comando passato come parametro, se non fornito elenca i comandi disponibili|
-|`listDir`|`listDir/ld]`|elenca il contenuto della directory di lavoro|
-|`seek`|`seek/s[filename][offset]`|sposta la posizione del puntatore del file indicato da `filename` su un `offset` specificato|
 |`write`|`write/w [filename] [content]`|scrive nel file di testo, indicato dal parametro `filename`, il contenuto del parametro. `content`. Se il file non esiste lo crea|
+|`seek`|`seek/s[filename][offset]`|sposta la posizione del puntatore del file indicato da `filename` su un `offset` specificato|
+|`help`|`help/h [command]`|fornisce una descrizione del comando passato come parametro, se non fornito elenca i comandi disponibili|
+
+
+
 
 
 ### Activity

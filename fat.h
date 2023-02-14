@@ -49,7 +49,7 @@ typedef struct FileHandle{
   DirectoryEntry* entry;
   // void* start;
   // void* end;
-  int seek;
+  u_int16_t seek;
 }FileHandle;
 
 typedef struct ListPath ListPath;
@@ -161,7 +161,7 @@ FileHandle* get_file_handle(DirectoryEntry*);
 
 void readDisk(char*);
 
-int seek(FileHandle*, int);
+int seek(FileHandle*, u_int16_t);
 
 u_int16_t sector_current_dir();
 

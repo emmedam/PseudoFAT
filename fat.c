@@ -657,7 +657,7 @@ FileHandle *get_file_handle(DirectoryEntry* entry){
 }
 
 
-int seek(FileHandle* fe, int offset){
+int seek(FileHandle* fe, u_int16_t offset){
     if(offset < 0 || offset > fe->entry->dimension)
         return 1;
     fe->seek = offset;
@@ -847,7 +847,7 @@ void help(char* command){
         }
 
         else if(strcmp(command, "eraseDir") == 0 || strcmp(command, "rmdir") == 0){
-            printf("eraseDir|rd<filename>  rmdir[dirname] \telimina la directory, indicata dal parametro dirname, se vuota\n");
+            printf("eraseDir|rd<filename>  rmdir[dirname] \telimina la directory, indicata dal parametro dirname, solamente nel caso in cui sia vuota\n");
         }
 
         else if (strcmp(command, "exit") == 0){
