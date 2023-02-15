@@ -510,7 +510,7 @@ char* read_file(char *file_name){
         curr_cluster = next_cluster;
     }
     free(res_tmp);
-    strcat(res, " ");
+    // strcat(res, " ");
     
     return res;
 }
@@ -588,7 +588,7 @@ DirectoryEntry *write_file(char *file_content, FileHandle *file_handle){
     }
 
     // aggiorno data di modifica e dimensione file
-    file_handle->entry->dimension = dimension;
+    file_handle->entry->dimension = strlen(file_content) + 1;
     file_handle->entry->update_date = time(NULL);
 
     return file_handle->entry;

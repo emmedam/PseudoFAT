@@ -29,9 +29,10 @@ int main(int argc, char** argv){
     read_boot_record();
     
     char* token;
-    char* read_text;
+    char* read_text = NULL;
 
     FileHandle* global_handle = NULL;
+
     
     while(1){
         print_path(path);
@@ -79,8 +80,25 @@ int main(int argc, char** argv){
             token = strtok(NULL, " ");
             read_text = read_file(token);
             if (read_text){
-                printf("%s\n", read_text);
+                FileHandle* fe = get_file_handle(get_dir_entry(token));
+                if(global_handle != NULL && fe->entry == global_handle->entry){
+                    if(global_handle->seek > strlen(read_text))
+                        printf("\n");
+                    else
+                        printf("%s\n", read_text + global_handle->seek);
+                    
+                    free(global_handle);
+                    global_handle = NULL;
+                }
+                else{
+                    printf("%s\n", read_text);
+                    
+                }
+                free(fe);
                 free(read_text);
+                read_text = NULL;
+
+                
             }
         }
 
@@ -107,20 +125,26 @@ int main(int argc, char** argv){
                             write_file(token, fe);
                         }else{
                             if(global_handle != NULL && fe->entry == global_handle->entry){
+                                int dim = global_handle->seek + strlen(token);
                                 
-                                int dim = global_handle->seek + strlen(token) + 2;
-                                char* dest = calloc(sizeof(char), dim);
+                                if( dim > strlen(read_text)){
+                                    read_text = realloc(read_text, dim + 1);
+                                    // write_file(strcat(read_text, token), fe);
+                                    *(read_text + dim) = '\0';
+                                }
                                 
-                                strncpy(dest, read_text, global_handle->seek + 1);
-                                write_file(strcat(dest, token), fe);
-                                
+                                int i = global_handle->seek;
+                                for(int j = 0; j < strlen(token); j++){
+                                    *(read_text + i++) = *(token+j);
+                                }
+
+                                write_file(read_text, fe);
+                            
                                 free(global_handle);
                                 global_handle = NULL;
-                                free(dest);
                             }
                             else{
-                                read_text = realloc(
-                                    read_text, strlen(read_text) + strlen(token) + 2);
+                                read_text = realloc(read_text, strlen(read_text) + strlen(token) + 1);
                                 write_file(strcat(read_text, token), fe);
                             }
                             
@@ -128,6 +152,7 @@ int main(int argc, char** argv){
                     
                         free(fe);
                         free(read_text);
+                        read_text = NULL;
                     }
                 }
             }
@@ -135,15 +160,27 @@ int main(int argc, char** argv){
 
         else if(strcmp(token, "seek") == 0 || strcmp(token, "s") == 0){
             token = strtok(NULL, " ");
-            DirectoryEntry* dir_entry = get_dir_entry(token);
-            if(!dir_entry){
-                printf(COLOR_RED "file inesistente\n" COLOR_DEFAULT);
+            if(token){
+                DirectoryEntry* dir_entry = get_dir_entry(token);
+                if(!dir_entry){
+                    printf(COLOR_RED "file inesistente\n" COLOR_DEFAULT);
+                }
+                else{
+                    global_handle = get_file_handle(dir_entry);
+                    token = strtok(NULL, " ");
+                    if(!token)
+                        printf("inserire offset\n");
+                    else{
+                        if(seek(global_handle, atoi(token)) == 1){
+                            printf(COLOR_RED "offset non valido\n" COLOR_DEFAULT);
+                            free(global_handle);
+                            global_handle = NULL;
+                        }
+                    }
+                }
             }
             else{
-                global_handle = get_file_handle(dir_entry);
-                if(seek(global_handle, atoi(strtok(NULL, " "))) == 1){
-                    printf(COLOR_RED "offset non valido\n" COLOR_DEFAULT);
-                }
+                printf("Inserire nome file\n");
             }
             
 
