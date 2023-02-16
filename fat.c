@@ -423,7 +423,7 @@ FileHandle* create_file(char *file_name, int dimension){
         // alloco una porzione di memoria di pari alla dimensione, che verrà scritta nel file
         data_file = (char *)malloc(dimension * sizeof(char));
         for (int i = 0; i < dimension - 1; i++){
-            *(data_file + i) = "Fatti non fummo a viver come bruti, ma a seguir virtude e canoscenza."[i % 69];
+            *(data_file + i) = "Fatti non foste a viver come bruti, ma a seguir virtute e canoscenza."[i % 69];
         }
         *(data_file + dimension - 1) = '\0';
         printf("contenuto del file: \n%s\n", data_file);
