@@ -120,6 +120,8 @@ Il programma si utilizza da terminale, in ambiente **linux**, e si avvia con il 
 
 il parametro `diskname` (max 12 caratteri) indica il nome del disco sul quale lavorare, se non esiste si crea un nuovo disco altrimenti mappa in memoria quello passato come parametro.
 
+Si precisa che il programma è stato realizzato con l'intento di essere utilizzato da un utente finale, non come libreria, ma attraverso l'uso interattivo con una interfaccia shell da console.
+
 |comando|sintassi |descrizione|
 |:-------|:--------|:----------|
 |`changeDir`|`changeDir\|cd [dirname]`|cambia la `directory` di lavoro come indicato dal parametro `dirname`. Per spostarsi nella cartella padre bisogna digitare `cd ..`, se invece ci si vuole spostare nella cartella principale, la root, bisogna digitare `cd .`|
