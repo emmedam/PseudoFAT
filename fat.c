@@ -621,7 +621,7 @@ FileHandle *get_file_handle(DirectoryEntry* entry){
 
 
 int seek(FileHandle* fe, u_int16_t offset){
-    if(offset < 0 || offset > fe->entry->dimension)
+    if(offset < 0 || offset > fe->entry->dimension-1)
         return 1;
     fe->seek = offset;
     return 0;

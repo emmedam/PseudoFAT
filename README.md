@@ -133,7 +133,7 @@ il parametro `diskname` (max 12 caratteri) indica il nome del disco sul quale la
 |`info`|`info\|i`|elenca a video informazioni sul volume di lavoro|
 |`read`|`read\|r [filename]`|legge il contenuto testuale del file passato come parametro e lo visualizza a schermo|
 |`write`|`write\|w [filename] [content]`|scrive nel file di testo, indicato dal parametro `filename`, il contenuto del parametro. `content`. Se non viene indicata una particolare posizione nel file con il comando `seek` il contenuto viene accodato, altrimenti viene inserito a partire dalla posizione indicata|
-|`seek`|`seek\|s [filename] [offset]`|sposta la posizione del puntatore del file indicato da `filename` su un `offset` specificato|
+|`seek`|`seek\|s [filename] [offset]`|sposta la posizione del puntatore del file indicato da `filename` su un `offset` specificato. L'offset per essere valido deve essere compreso tra 0 e la dimensione del file meno 1|
 |`help`|`help\|h [command]`|fornisce una descrizione del comando passato come parametro, se non fornito elenca i comandi disponibili|
 
 ### Strutture dati utilizzate

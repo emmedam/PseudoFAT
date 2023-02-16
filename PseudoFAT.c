@@ -1,7 +1,7 @@
 #include "fat.c"
 
 int main(int argc, char** argv){
-    init();
+    
     char input[500];
     
     if(argc == 1){
@@ -15,7 +15,7 @@ int main(int argc, char** argv){
     }
 
     char *f_name = argv[1];
-    
+    init();
     //controllo se file è gia esistente
     if (access(f_name, F_OK) == 0) {
         printf("il file è già esistente in memoria\n");
@@ -226,6 +226,9 @@ int main(int argc, char** argv){
         exit(EXIT_FAILURE);
     }
     
+    if(global_handle)
+        free(global_handle);
+
     free(boot_record);
     list_free(path);
     return 0;
